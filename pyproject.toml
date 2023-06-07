@@ -8,7 +8,12 @@ packages = [{include = "gardena_bluetooth"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
+bleak = "^0.20.2"
+bleak-retry-connector = "^3.0.2"
+asyncclick = {version = "^8.1.3.4", optional = true}
 
+[tool.poetry.extras]
+cli = ["asyncclick"]
 
 [build-system]
 requires = ["poetry-core"]
