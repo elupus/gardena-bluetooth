@@ -1,15 +1,18 @@
+from __future__ import annotations
+
 from bleak.uuids import register_uuids
-from .const import Value, DeviceConfiguration, DeviceInformation, Battery
-from enum import Enum
-from typing import Type
+from .const import ScanService
+from .parse import Service
 
+register_uuids({
+    service.uuid: f"Gardena {service.__name__}"
+    for service in Service.registry.values()
+})
 
-def register_enum_uuids(enum: Type[Enum]):
-    uuids = {data.value: f"Gardena {enum.__name__} {data.name}" for data in enum}
-    register_uuids(uuids)
+register_uuids({
+    char.uuid: f"Gardena {service.__name__} {char.name}"
+    for service in Service.registry.values()
+    for char in service.characteristics()
+})
 
-
-register_enum_uuids(Value)
-register_enum_uuids(DeviceConfiguration)
-register_enum_uuids(DeviceInformation)
-register_enum_uuids(Battery)
+register_uuids({ScanService: "Husqvarna"})
