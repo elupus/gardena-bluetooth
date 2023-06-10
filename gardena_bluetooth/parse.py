@@ -1,8 +1,8 @@
-from typing import Any, ClassVar, TypeVar, Generic
+from typing import ClassVar, TypeVar, Generic
 from dataclasses import dataclass
 from datetime import datetime
 from bleak import BleakClient
-
+from .exceptions import CharacteristicNoAccess, CharacteristicNotFound
 
 def pretty_name(name: str):
     data = name.split("_")
@@ -151,7 +151,9 @@ async def read_characteristic(
     """Read data to from a characteristic."""
     characteristic = client.services.get_characteristic(char.uuid)
     if characteristic is None:
-        raise ValueError(f"Unable to find characteristic {char.uuid}")
+        raise CharacteristicNotFound(f"Unable to find characteristic {char.uuid}")
+    if "read" not in characteristic.properties:
+        raise CharacteristicNoAccess(f"Characteristic {char.uuid} is not writable")
     data = await client.read_gatt_char(characteristic)
     return char.decode(data)
 
@@ -165,6 +167,8 @@ async def write_characteristic(
     """Write data to a characteristic."""
     characteristic = client.services.get_characteristic(char.uuid)
     if characteristic is None:
-        raise ValueError(f"Unable to find characteristic {char.uuid}")
+        raise CharacteristicNotFound(f"Unable to find characteristic {char.uuid}")
+    if "write" not in characteristic.properties:
+        raise CharacteristicNoAccess(f"Characteristic {char.uuid} is not writable")
     data = char.encode(value)
     await client.write_gatt_char(characteristic, data, response=response)
