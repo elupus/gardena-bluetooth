@@ -2,12 +2,11 @@ from typing import Any, ClassVar
 from dataclasses import dataclass
 from datetime import datetime
 
+
 def pretty_name(name: str):
     data = name.split("_")
-    return " ".join(
-        f"{part[0].upper()}{part[1:]}"
-        for part in data
-    )
+    return " ".join(f"{part[0].upper()}{part[1:]}" for part in data)
+
 
 @dataclass
 class Characteristic:
@@ -21,68 +20,106 @@ class Characteristic:
     def __post_init__(self):
         self.registry[self.uuid] = self
 
-    @staticmethod
-    def decode(data: bytes) -> Any:
-        return None
+    @classmethod
+    def decode(cls, data: bytes) -> Any:
+        raise NotImplementedError(f"Decoding of {type(cls)} is not implemented")
+
+    @classmethod
+    def encode(cls, data: Any) -> bytes:
+        raise NotImplementedError(f"Encoding of {type(cls)} is not implemented")
 
 
 @dataclass
 class CharacteristicBytes(Characteristic):
-    @staticmethod
-    def decode(data: bytes) -> bytes:
+    @classmethod
+    def decode(cls, data: bytes) -> bytes:
         return data
+
+    @classmethod
+    def encode(cls, value: bytes) -> bytes:
+        return value
 
 
 @dataclass
 class CharacteristicBool(Characteristic):
-    @staticmethod
-    def decode(data: bytes) -> bool:
+    @classmethod
+    def decode(cls, data: bytes) -> bool:
         return data[0] != 0
+
+    @classmethod
+    def encode(data: bool) -> bytes:
+        if data:
+            return b"\x01"
+        return b"\x00"
 
 
 @dataclass
 class CharacteristicString(Characteristic):
-    @staticmethod
-    def decode(data: bytes) -> str:
+    @classmethod
+    def decode(cls, data: bytes) -> str:
         return data.decode("ASCII")
+
+    @classmethod
+    def encode(cls, value: str) -> bytes:
+        return value.encode("ASCII")
 
 
 @dataclass
 class CharacteristicInt(Characteristic):
-    @staticmethod
-    def decode(data: bytes) -> int:
+    @classmethod
+    def decode(cls, data: bytes) -> int:
         return int.from_bytes(data, "little", signed=True)
+
+    @classmethod
+    def encode(cls, value: int) -> bytes:
+        return value.to_bytes(1, "little", signed=True)
 
 
 @dataclass
-class CharacteristicUnsignedInt(Characteristic):
-    @staticmethod
-    def decode(data: bytes) -> int:
+class CharacteristicLong(Characteristic):
+    @classmethod
+    def decode(cls, data: bytes) -> int:
+        return int.from_bytes(data, "little", signed=True)
+
+    @classmethod
+    def encode(cls, value: int) -> bytes:
+        return value.to_bytes(4, "little", signed=True)
+
+
+@dataclass
+class CharacteristicUInt16(Characteristic):
+    @classmethod
+    def decode(cls, data: bytes) -> int:
         return int.from_bytes(data, "little", signed=False)
+
+    @classmethod
+    def encode(cls, value: int) -> bytes:
+        return value.to_bytes(2, "little", signed=False)
 
 
 @dataclass
 class CharacteristicLongArray(Characteristic):
-    @staticmethod
-    def decode(data: bytes) -> list[datetime]:
-        return [
-            int.from_bytes(data[i:i + 4])
-            for i in range(0, len(data), 4)
-        ]
+    @classmethod
+    def decode(cls, data: bytes) -> list[datetime]:
+        return [int.from_bytes(data[i : i + 4]) for i in range(0, len(data), 4)]
 
 
 @dataclass
 class CharacteristicTime(Characteristic):
-    @staticmethod
-    def decode(data: bytes) -> datetime:
+    @classmethod
+    def decode(cls, data: bytes) -> datetime:
         value = int.from_bytes(data, "little")
         return datetime.fromtimestamp(value)
+
+    @classmethod
+    def encode(cls, value: datetime) -> bytes:
+        return int(value.timestamp).to_bytes(4, "little", signed=True)
 
 
 @dataclass
 class CharacteristicTimeArray(Characteristic):
-    @staticmethod
-    def decode(data: bytes) -> list[datetime]:
+    @classmethod
+    def decode(cls, data: bytes) -> list[datetime]:
         return [
             datetime.fromtimestamp(value)
             for value in CharacteristicLongArray.decode(data)
