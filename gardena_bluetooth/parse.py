@@ -1,6 +1,6 @@
 from typing import Any, ClassVar
 from dataclasses import dataclass
-
+from datetime import datetime
 
 def pretty_name(name: str):
     data = name.split("_")
@@ -51,7 +51,42 @@ class CharacteristicString(Characteristic):
 class CharacteristicInt(Characteristic):
     @staticmethod
     def decode(data: bytes) -> int:
-        return int.from_bytes(data, "little")
+        return int.from_bytes(data, "little", signed=True)
+
+
+@dataclass
+class CharacteristicUnsignedInt(Characteristic):
+    @staticmethod
+    def decode(data: bytes) -> int:
+        return int.from_bytes(data, "little", signed=False)
+
+
+@dataclass
+class CharacteristicLongArray(Characteristic):
+    @staticmethod
+    def decode(data: bytes) -> list[datetime]:
+        return [
+            int.from_bytes(data[i:i + 4])
+            for i in range(0, len(data), 4)
+        ]
+
+
+@dataclass
+class CharacteristicTime(Characteristic):
+    @staticmethod
+    def decode(data: bytes) -> datetime:
+        value = int.from_bytes(data, "little")
+        return datetime.fromtimestamp(value)
+
+
+@dataclass
+class CharacteristicTimeArray(Characteristic):
+    @staticmethod
+    def decode(data: bytes) -> list[datetime]:
+        return [
+            datetime.fromtimestamp(value)
+            for value in CharacteristicLongArray.decode(data)
+        ]
 
 
 class Service:

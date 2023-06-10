@@ -48,7 +48,7 @@ async def connect(address: str):
                     data = None
                 click.echo(f" -  {char}")
                 click.echo(f" -  {char.properties}")
-                if data and parser:
+                if data is not None and parser:
                     click.echo(f" -  Data: {parser.decode(data)}")
 
             async with anyio.create_task_group() as tg:
