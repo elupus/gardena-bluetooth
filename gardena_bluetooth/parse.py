@@ -1,6 +1,7 @@
-from typing import Any, ClassVar
+from typing import Any, ClassVar, TypeVar, Generic
 from dataclasses import dataclass
 from datetime import datetime
+from bleak import BleakClient
 
 
 def pretty_name(name: str):
@@ -8,8 +9,11 @@ def pretty_name(name: str):
     return " ".join(f"{part[0].upper()}{part[1:]}" for part in data)
 
 
+CharacteristicType = TypeVar("CharacteristicType")
+
+
 @dataclass
-class Characteristic:
+class Characteristic(Generic[CharacteristicType]):
     uuid: str
     name: str = ""
     registry: ClassVar[dict[str, "Characteristic"]] = {}
@@ -21,16 +25,16 @@ class Characteristic:
         self.registry[self.uuid] = self
 
     @classmethod
-    def decode(cls, data: bytes) -> Any:
+    def decode(cls, data: bytes) -> CharacteristicType:
         raise NotImplementedError(f"Decoding of {type(cls)} is not implemented")
 
     @classmethod
-    def encode(cls, data: Any) -> bytes:
+    def encode(cls, data: CharacteristicType) -> bytes:
         raise NotImplementedError(f"Encoding of {type(cls)} is not implemented")
 
 
 @dataclass
-class CharacteristicBytes(Characteristic):
+class CharacteristicBytes(Characteristic[bytes]):
     @classmethod
     def decode(cls, data: bytes) -> bytes:
         return data
@@ -41,7 +45,7 @@ class CharacteristicBytes(Characteristic):
 
 
 @dataclass
-class CharacteristicBool(Characteristic):
+class CharacteristicBool(Characteristic[bool]):
     @classmethod
     def decode(cls, data: bytes) -> bool:
         return data[0] != 0
@@ -54,7 +58,7 @@ class CharacteristicBool(Characteristic):
 
 
 @dataclass
-class CharacteristicString(Characteristic):
+class CharacteristicString(Characteristic[str]):
     @classmethod
     def decode(cls, data: bytes) -> str:
         return data.decode("ASCII")
@@ -65,7 +69,7 @@ class CharacteristicString(Characteristic):
 
 
 @dataclass
-class CharacteristicInt(Characteristic):
+class CharacteristicInt(Characteristic[int]):
     @classmethod
     def decode(cls, data: bytes) -> int:
         return int.from_bytes(data, "little", signed=True)
@@ -76,7 +80,7 @@ class CharacteristicInt(Characteristic):
 
 
 @dataclass
-class CharacteristicLong(Characteristic):
+class CharacteristicLong(Characteristic[int]):
     @classmethod
     def decode(cls, data: bytes) -> int:
         return int.from_bytes(data, "little", signed=True)
@@ -87,7 +91,7 @@ class CharacteristicLong(Characteristic):
 
 
 @dataclass
-class CharacteristicUInt16(Characteristic):
+class CharacteristicUInt16(Characteristic[int]):
     @classmethod
     def decode(cls, data: bytes) -> int:
         return int.from_bytes(data, "little", signed=False)
@@ -98,14 +102,14 @@ class CharacteristicUInt16(Characteristic):
 
 
 @dataclass
-class CharacteristicLongArray(Characteristic):
+class CharacteristicLongArray(Characteristic[list[int]]):
     @classmethod
-    def decode(cls, data: bytes) -> list[datetime]:
+    def decode(cls, data: bytes) -> list[int]:
         return [int.from_bytes(data[i : i + 4]) for i in range(0, len(data), 4)]
 
 
 @dataclass
-class CharacteristicTime(Characteristic):
+class CharacteristicTime(Characteristic[datetime]):
     @classmethod
     def decode(cls, data: bytes) -> datetime:
         value = int.from_bytes(data, "little")
@@ -113,11 +117,11 @@ class CharacteristicTime(Characteristic):
 
     @classmethod
     def encode(cls, value: datetime) -> bytes:
-        return int(value.timestamp).to_bytes(4, "little", signed=True)
+        return int(value.timestamp()).to_bytes(4, "little", signed=True)
 
 
 @dataclass
-class CharacteristicTimeArray(Characteristic):
+class CharacteristicTimeArray(Characteristic[list[datetime]]):
     @classmethod
     def decode(cls, data: bytes) -> list[datetime]:
         return [
@@ -139,3 +143,28 @@ class Service:
         for value in vars(cls).values():
             if isinstance(value, Characteristic):
                 yield value
+
+
+async def read_characteristic(
+    client: BleakClient, char: Characteristic[CharacteristicType]
+) -> CharacteristicType:
+    """Read data to from a characteristic."""
+    characteristic = client.services.get_characteristic(char.uuid)
+    if characteristic is None:
+        raise ValueError(f"Unable to find characteristic {char.uuid}")
+    data = await client.read_gatt_char(characteristic)
+    return char.decode(data)
+
+
+async def write_characteristic(
+    client: BleakClient,
+    char: Characteristic[CharacteristicType],
+    value: CharacteristicType,
+    response=False,
+) -> None:
+    """Write data to a characteristic."""
+    characteristic = client.services.get_characteristic(char.uuid)
+    if characteristic is None:
+        raise ValueError(f"Unable to find characteristic {char.uuid}")
+    data = char.encode(value)
+    await client.write_gatt_char(characteristic, data, response=response)
