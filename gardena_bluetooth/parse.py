@@ -163,7 +163,7 @@ async def write_characteristic(
     char: Characteristic[CharacteristicType],
     value: CharacteristicType,
     response=False,
-) -> bytes:
+) -> None:
     """Write data to a characteristic."""
     characteristic = client.services.get_characteristic(char.uuid)
     if characteristic is None:
@@ -172,4 +172,3 @@ async def write_characteristic(
         raise CharacteristicNoAccess(f"Characteristic {char.uuid} is not writable")
     data = char.encode(value)
     await client.write_gatt_char(characteristic, data, response=response)
-    return data
