@@ -2,6 +2,7 @@ from typing import ClassVar, TypeVar, Generic
 from dataclasses import dataclass
 from datetime import datetime
 from bleak import BleakClient
+from enum import IntEnum
 from .exceptions import CharacteristicNoAccess, CharacteristicNotFound
 
 def pretty_name(name: str):
@@ -144,13 +145,27 @@ class Service:
             if isinstance(value, Characteristic):
                 yield value
 
+class EnumOrInt(IntEnum):
+    @classmethod
+    def enum_or_int(cls, value: int):
+        try:
+            return cls(value)
+        except ValueError:
+            return value
+
+class ProductGroup(EnumOrInt):
+    MOWER=1
+    GARDEN_PUMP=17
+    WATER_CONTROL=18
+
+
 @dataclass
 class ManufacturerData:
     pairable: bool | None
     serial: int | None
-    group: int
-    model: int
-    variant: int
+    group: int | ProductGroup | None
+    model: int | None
+    variant: int | None
 
     @staticmethod
     def decode_dict(data: bytes):
@@ -172,7 +187,7 @@ class ManufacturerData:
         return ManufacturerData(
             pairable=bool.from_bytes(pairable, "little") if pairable else None,
             serial=int.from_bytes(serial, "little") if serial else None,
-            group=info.get(0),
+            group=ProductGroup.enum_or_int(info.get(0)),
             model=info.get(1),
             variant=info.get(2),
         )
