@@ -144,6 +144,38 @@ class Service:
             if isinstance(value, Characteristic):
                 yield value
 
+@dataclass
+class ManufacturerData:
+    pairable: bool | None
+    serial: int | None
+    group: int
+    model: int
+    variant: int
+
+    @staticmethod
+    def decode_dict(data: bytes):
+        res: dict[int, bytes] = {}
+        idx = 0
+        while idx < len(data):
+            size = data[idx]
+            key = data[idx+1]
+            res[key] = data[idx+2:idx+size+1]
+            idx += size + 1
+        return res
+
+    @staticmethod
+    def decode(data: bytes):
+        value = ManufacturerData.decode_dict(data)
+        info = dict(enumerate(value.get(6, b"")))
+        serial = value.get(4)
+        pairable = value.get(5)
+        return ManufacturerData(
+            pairable=bool.from_bytes(pairable, "little") if pairable else None,
+            serial=int.from_bytes(serial, "little") if serial else None,
+            group=info.get(0),
+            model=info.get(1),
+            variant=info.get(2),
+        )
 
 async def read_characteristic(
     client: BleakClient, char: Characteristic[CharacteristicType]
