@@ -162,7 +162,7 @@ async def write_characteristic(
     client: BleakClient,
     char: Characteristic[CharacteristicType],
     value: CharacteristicType,
-    response=False,
+    response=True,
 ) -> None:
     """Write data to a characteristic."""
     characteristic = client.services.get_characteristic(char.uuid)
