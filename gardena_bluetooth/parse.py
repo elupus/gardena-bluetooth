@@ -1,4 +1,4 @@
-from typing import ClassVar, TypeVar, Generic
+from typing import ClassVar, TypeVar, Generic, Final
 from dataclasses import dataclass
 from datetime import datetime
 from bleak import BleakClient
@@ -161,6 +161,7 @@ class ProductGroup(EnumOrInt):
 
 @dataclass
 class ManufacturerData:
+    company: ClassVar[int] = 0x0426
     pairable: bool | None
     serial: int | None
     group: int | ProductGroup | None
