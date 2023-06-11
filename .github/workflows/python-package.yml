@@ -45,3 +45,9 @@ jobs:
     - name: Run tests
       run: |
         python -m poetry run python -m pytest -sxv
+        
+    - name: Run quality checks
+      run: |
+        python -m poetry run ruff check .
+        
+
