@@ -8,7 +8,7 @@ from .parse import (
     CharacteristicBytes,
     CharacteristicLongArray,
     CharacteristicUInt16,
-    CharacteristicLong
+    CharacteristicLong,
 )
 
 ScanService = "98bd0001-0b0e-421a-84e5-ddbf75dc6de4"
@@ -50,6 +50,7 @@ class Battery(Service):
 
     battery_level = CharacteristicInt("98bd2a19-0b0e-421a-84e5-ddbf75dc6de4")
 
+
 class Sensor(Service):
     uuid = "98bd0010-0b0e-421a-84e5-ddbf75dc6de4"
 
@@ -60,6 +61,7 @@ class Sensor(Service):
     battery_level = CharacteristicInt("98bd0015-0b0e-421a-84e5-ddbf75dc6de4")
     measurement_timestamp = CharacteristicTime("98bd0016-0b0e-421a-84e5-ddbf75dc6de4")
     force_measurement = CharacteristicInt("98bd0017-0b0e-421a-84e5-ddbf75dc6de4")
+
 
 class WateringHistory(Service):
     uuid = "98bd0d10-0b0e-421a-84e5-ddbf75dc6de4"
@@ -75,6 +77,7 @@ class ErrorHistory(Service):
 
     error_id = CharacteristicBytes("98bdeeef-0b0e-421a-84e5-ddbf75dc6de4")
     error_count = CharacteristicInt("98bdeef0-0b0e-421a-84e5-ddbf75dc6de4")
+
 
 class Pump(Service):
     uuid = "98bd0100-0b0e-421a-84e5-ddbf75dc6de4"
@@ -96,6 +99,7 @@ class Pump(Service):
     error_code = CharacteristicBytes("98bd010f-0b0e-421a-84e5-ddbf75dc6de4")
     user_motor_runtime = CharacteristicLong("98bd0110-0b0e-421a-84e5-ddbf75dc6de4")
     total_motor_runtime = CharacteristicLong("98bd0111-0b0e-421a-84e5-ddbf75dc6de4")
+
 
 class Reset(Service):
     uuid = "98bdff00-0b0e-421a-84e5-ddbf75dc6de4"

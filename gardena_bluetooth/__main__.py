@@ -1,24 +1,33 @@
 import asyncclick as click
 import anyio
-from bleak import BleakScanner, BLEDevice, AdvertisementData, BleakClient, BleakGATTCharacteristic
+from bleak import (
+    BleakScanner,
+    BLEDevice,
+    AdvertisementData,
+    BleakClient,
+    BleakGATTCharacteristic,
+)
 from bleak.uuids import uuidstr_to_str
 from .const import ScanService, FotaService
 from .parse import Characteristic
 
+
 @click.group()
 async def main():
     pass
+
 
 @main.command()
 async def scan():
     click.echo("Scanning for devices")
 
     devices = set()
+
     def detected(device: BLEDevice, advertisement: AdvertisementData):
         if device not in devices:
             if ScanService not in advertisement.service_uuids:
                 return
-            devices.add(device)               
+            devices.add(device)
 
         click.echo(f"Device: {device}")
         for service in advertisement.service_uuids:
@@ -56,11 +65,11 @@ async def connect(address: str):
                     tg.start_soon(read_print, char)
 
 
-
 @main.command()
 async def chars():
     for char in Characteristic.registry.values():
         click.echo(char.name)
+
 
 try:
     main()

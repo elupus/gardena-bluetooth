@@ -5,6 +5,7 @@ from bleak import BleakClient
 from enum import IntEnum
 from .exceptions import CharacteristicNoAccess, CharacteristicNotFound
 
+
 def pretty_name(name: str):
     data = name.split("_")
     return " ".join(f"{part[0].upper()}{part[1:]}" for part in data)
@@ -145,6 +146,7 @@ class Service:
             if isinstance(value, Characteristic):
                 yield value
 
+
 class EnumOrInt(IntEnum):
     @classmethod
     def enum_or_int(cls, value: int):
@@ -153,10 +155,11 @@ class EnumOrInt(IntEnum):
         except ValueError:
             return value
 
+
 class ProductGroup(EnumOrInt):
-    MOWER=1
-    GARDEN_PUMP=17
-    WATER_CONTROL=18
+    MOWER = 1
+    GARDEN_PUMP = 17
+    WATER_CONTROL = 18
 
 
 @dataclass
@@ -174,8 +177,8 @@ class ManufacturerData:
         idx = 0
         while idx < len(data):
             size = data[idx]
-            key = data[idx+1]
-            res[key] = data[idx+2:idx+size+1]
+            key = data[idx + 1]
+            res[key] = data[idx + 2 : idx + size + 1]
             idx += size + 1
         return res
 
@@ -192,6 +195,7 @@ class ManufacturerData:
             model=info.get(1),
             variant=info.get(2),
         )
+
 
 async def read_characteristic(
     client: BleakClient, char: Characteristic[CharacteristicType]
