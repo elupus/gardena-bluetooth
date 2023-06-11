@@ -1,14 +1,10 @@
-import asyncclick as click
 import anyio
-from bleak import (
-    BleakScanner,
-    BLEDevice,
-    AdvertisementData,
-    BleakClient,
-    BleakGATTCharacteristic,
-)
+import asyncclick as click
+from bleak import (AdvertisementData, BleakClient, BleakGATTCharacteristic,
+                   BleakScanner, BLEDevice)
 from bleak.uuids import uuidstr_to_str
-from .const import ScanService, FotaService
+
+from .const import FotaService, ScanService
 from .parse import Characteristic
 
 

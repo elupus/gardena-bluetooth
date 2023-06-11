@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from bleak.uuids import register_uuids
+
 from .const import ScanService
 from .parse import Service
 

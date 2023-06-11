@@ -1,15 +1,7 @@
-from .parse import (
-    Service,
-    CharacteristicBool,
-    CharacteristicInt,
-    CharacteristicString,
-    CharacteristicTime,
-    CharacteristicTimeArray,
-    CharacteristicBytes,
-    CharacteristicLongArray,
-    CharacteristicUInt16,
-    CharacteristicLong,
-)
+from .parse import (CharacteristicBool, CharacteristicBytes, CharacteristicInt,
+                    CharacteristicLong, CharacteristicLongArray,
+                    CharacteristicString, CharacteristicTime,
+                    CharacteristicTimeArray, CharacteristicUInt16, Service)
 
 ScanService = "98bd0001-0b0e-421a-84e5-ddbf75dc6de4"
 FotaService = "0000ffc0-0000-1000-8000-00805f9b34fb"

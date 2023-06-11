@@ -1,8 +1,10 @@
-from typing import ClassVar, TypeVar, Generic, Final
 from dataclasses import dataclass
 from datetime import datetime
-from bleak import BleakClient
 from enum import IntEnum
+from typing import ClassVar, Final, Generic, TypeVar
+
+from bleak import BleakClient
+
 from .exceptions import CharacteristicNoAccess, CharacteristicNotFound
 
 
