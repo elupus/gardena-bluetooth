@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from enum import IntEnum
-from typing import ClassVar, Final, Generic, TypeVar
+from typing import ClassVar, Generic, TypeVar
 
 from bleak import BleakClient
 
