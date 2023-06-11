@@ -3,7 +3,7 @@ name = "gardena-bluetooth"
 version = "0.1.0"
 description = ""
 authors = ["Joakim Plate <elupus@ecce.se>"]
-readme = "README.md"
+readme = "README.rst"
 packages = [{include = "gardena_bluetooth"}]
 
 [tool.poetry.dependencies]
