@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterable
 from datetime import datetime
 
 from bleak import BleakClient
@@ -9,6 +10,8 @@ from bleak.uuids import register_uuids
 from .const import DeviceConfiguration, ScanService
 from .exceptions import CharacteristicNoAccess, CharacteristicNotFound
 from .parse import Characteristic, CharacteristicType, Service
+
+from typing import TypeVar
 
 LOGGER = logging.getLogger(__name__)
 
@@ -73,3 +76,12 @@ async def update_timestamp(client: BleakClient, now: datetime):
             now.replace(tzinfo=None),
             True,
         )
+
+
+async def get_all_characteristics_uuid(client: BleakClient) -> set[str]:
+    """Get all characteristics from device."""
+    return {
+        characteristic.uuid
+        for service in client.services
+        for characteristic in service.characteristics
+    }
