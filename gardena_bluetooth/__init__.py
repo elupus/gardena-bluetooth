@@ -67,7 +67,7 @@ async def write_char(
 ) -> None:
     """Write data to a characteristic."""
     data = char.encode(value)
-    write_char_raw(client, char.uuid, data, response)
+    await write_char_raw(client, char.uuid, data, response)
 
 
 async def update_timestamp(client: BleakClient, now: datetime):
