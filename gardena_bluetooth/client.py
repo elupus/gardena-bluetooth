@@ -59,8 +59,10 @@ class CachedClient:
         self._count = 0
         self._lookup = device_lookup
         self._disconnect_delay = disconnect_delay
+        self._disconnect_job = CallLaterJob(self._disconnect)
 
-        self.disconnect = CallLaterJob(self._disconnect)
+    async def disconnect(self):
+        await self._disconnect_job.call_now()
 
     async def _disconnect(self):
         async with self._lock:
@@ -82,7 +84,7 @@ class CachedClient:
     @asynccontextmanager
     async def __call__(self):
         """Retrieve a context manager for a cached client."""
-        self.disconnect.cancel()
+        self._disconnect_job.cancel()
 
         async with self._lock:
             if not (client := self._client) or not client.is_connected:
@@ -93,11 +95,11 @@ class CachedClient:
                 yield client
             except:
                 LOGGER.debug("Disconnecting client due to exception")
-                await self.disconnect.call_now()
+                await self._disconnect_job.call_now()
                 raise
 
             finally:
                 self._count -= 1
 
                 if not self._count and self._client:
-                    self.disconnect.call_later(self._disconnect_delay)
+                    self._disconnect_job.call_later(self._disconnect_delay)
