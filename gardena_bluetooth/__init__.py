@@ -114,7 +114,11 @@ async def write_char(
 
 
 async def update_timestamp(client: BleakClient, now: datetime):
-    timestamp = await read_char(client, DeviceConfiguration.unix_timestamp)
+    try:
+        timestamp = await read_char(client, DeviceConfiguration.unix_timestamp)
+    except CharacteristicNoAccess:
+        LOGGER.debug("No timestamp defined for device")
+        return
     timestamp = timestamp.replace(tzinfo=now.tzinfo)
     delta = timestamp - now
     if abs(delta.total_seconds()) > 60:
@@ -127,6 +131,8 @@ async def update_timestamp(client: BleakClient, now: datetime):
             now.replace(tzinfo=None),
             True,
         )
+    else:
+        LOGGER.debug("No need to update timestamp local time delta was %s", delta)
 
 
 async def get_all_characteristics_uuid(client: BleakClient) -> set[str]:
