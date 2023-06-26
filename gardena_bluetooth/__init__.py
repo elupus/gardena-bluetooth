@@ -131,8 +131,10 @@ async def update_timestamp(client: BleakClient, now: datetime):
 
 async def get_all_characteristics_uuid(client: BleakClient) -> set[str]:
     """Get all characteristics from device."""
-    return {
+    characteristics = {
         characteristic.uuid
         for service in client.services
         for characteristic in service.characteristics
     }
+    LOGGER.debug("Characteristics: %s", characteristics)
+    return characteristics
