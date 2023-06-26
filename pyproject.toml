@@ -4,7 +4,10 @@ version = "0.4.0"
 description = ""
 authors = ["Joakim Plate <elupus@ecce.se>"]
 readme = "README.rst"
-packages = [{include = "gardena_bluetooth"}]
+packages = [
+    {include = "gardena_bluetooth"},
+    {include = "gardena_bluetooth/py.typed"},
+]
 
 [tool.poetry.dependencies]
 python = "^3.10"
