@@ -5,12 +5,15 @@ from datetime import datetime
 
 from bleak import BleakClient
 from bleak.uuids import register_uuids
+from typing import TypeVar, overload
 
 from .const import DeviceConfiguration, ScanService
 from .exceptions import CharacteristicNoAccess, CharacteristicNotFound
 from .parse import Characteristic, CharacteristicType, Service
 
 LOGGER = logging.getLogger(__name__)
+DEFAULT_MISSING = object()
+DEFAULT_TYPE = TypeVar("DEFAULT_TYPE")
 
 register_uuids(
     {
@@ -30,20 +33,61 @@ register_uuids(
 register_uuids({ScanService: "Husqvarna"})
 
 
-async def read_char_raw(client: BleakClient, uuid: str):
+@overload
+async def read_char_raw(client: BleakClient, uuid: str) -> bytes:
+    ...
+
+
+@overload
+async def read_char_raw(
+    client: BleakClient, uuid: str, default: DEFAULT_TYPE
+) -> bytes | DEFAULT_TYPE:
+    ...
+
+
+async def read_char_raw(
+    client: BleakClient, uuid: str, default: DEFAULT_TYPE = DEFAULT_MISSING
+) -> bytes | DEFAULT_TYPE:
     characteristic = client.services.get_characteristic(uuid)
     if characteristic is None:
+        if default is not DEFAULT_MISSING:
+            return default
         raise CharacteristicNotFound(f"Unable to find characteristic {uuid}")
     if "read" not in characteristic.properties:
+        if default is not DEFAULT_MISSING:
+            return default
         raise CharacteristicNoAccess(f"Characteristic {uuid} is not readable")
     return await client.read_gatt_char(characteristic)
 
 
+@overload
 async def read_char(
     client: BleakClient, char: Characteristic[CharacteristicType]
 ) -> CharacteristicType:
+    ...
+
+
+@overload
+async def read_char(
+    client: BleakClient,
+    char: Characteristic[CharacteristicType],
+    default: DEFAULT_TYPE,
+) -> CharacteristicType | DEFAULT_TYPE:
+    ...
+
+
+async def read_char(
+    client: BleakClient,
+    char: Characteristic[CharacteristicType],
+    default: DEFAULT_TYPE = DEFAULT_MISSING,
+) -> CharacteristicType | DEFAULT_TYPE:
     """Read data to from a characteristic."""
-    return char.decode(await read_char_raw(client, char.uuid))
+    try:
+        return char.decode(await read_char_raw(client, char.uuid))
+    except CharacteristicNotFound:
+        if default is not DEFAULT_MISSING:
+            return default
+        raise
 
 
 async def write_char_raw(
