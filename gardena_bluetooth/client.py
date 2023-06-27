@@ -108,17 +108,14 @@ class CachedConnection:
                 self._count += 1
                 try:
                     yield client
-                except:
-                    LOGGER.debug("Disconnecting client due to exception")
-                    await self._disconnect_job.call_now()
-                    raise
-
                 finally:
                     self._count -= 1
 
                     if not self._count and self._client:
                         self._disconnect_job.call_later(self._disconnect_delay)
         except BleakError as exception:
+            await self._disconnect_job.call_now()
+            LOGGER.warning("Unexpected disconnection from device %s", exception)
             raise CommunicationFailure(
                 f"Communcation failed with device: {exception}"
             ) from exception
