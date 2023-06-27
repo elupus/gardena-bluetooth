@@ -2,13 +2,21 @@ import asyncio
 import logging
 from collections.abc import Awaitable, Callable
 from contextlib import asynccontextmanager
+from datetime import datetime
+from typing import TypeVar, overload
 
 from bleak import BleakClient
 from bleak.backends.device import BLEDevice
 from bleak_retry_connector import establish_connection
 
-LOGGER = logging.getLogger(__name__)
+from .const import DeviceConfiguration
+from .exceptions import CharacteristicNoAccess, CharacteristicNotFound
+from .parse import Characteristic, CharacteristicType
 
+LOGGER = logging.getLogger(__name__)
+DEFAULT_MISSING = object()
+DEFAULT_TYPE = TypeVar("DEFAULT_TYPE")
+DEFAULT_DELAY = 1
 
 class CallLaterJob:
     """Helper to contain a function that is to be called later."""
@@ -103,3 +111,118 @@ class CachedClient:
 
                 if not self._count and self._client:
                     self._disconnect_job.call_later(self._disconnect_delay)
+
+
+class Client:
+    def __init__(self, client_or_device: CachedClient | BLEDevice) -> None:
+        if isinstance(client_or_device, CachedClient):
+            self._client = client_or_device
+        else:
+            self._client = CachedClient(DEFAULT_DELAY, lambda: client_or_device)
+
+    async def disconnect(self):
+        await self._client.disconnect()
+
+    @overload
+    async def read_char_raw(self, uuid: str) -> bytes:
+        ...
+
+    @overload
+    async def read_char_raw(
+        self, uuid: str, default: DEFAULT_TYPE
+    ) -> bytes | DEFAULT_TYPE:
+        ...
+
+    async def read_char_raw(
+        self, uuid: str, default: DEFAULT_TYPE = DEFAULT_MISSING
+    ) -> bytes | DEFAULT_TYPE:
+        async with self._client() as client:
+            characteristic = client.services.get_characteristic(uuid)
+            if characteristic is None:
+                if default is not DEFAULT_MISSING:
+                    return default
+                raise CharacteristicNotFound(f"Unable to find characteristic {uuid}")
+            if "read" not in characteristic.properties:
+                if default is not DEFAULT_MISSING:
+                    return default
+                raise CharacteristicNoAccess(f"Characteristic {uuid} is not readable")
+            return await client.read_gatt_char(characteristic)
+
+    @overload
+    async def read_char(
+        self, char: Characteristic[CharacteristicType]
+    ) -> CharacteristicType:
+        ...
+
+    @overload
+    async def read_char(
+        self,
+        char: Characteristic[CharacteristicType],
+        default: DEFAULT_TYPE,
+    ) -> CharacteristicType | DEFAULT_TYPE:
+        ...
+
+    async def read_char(
+        self,
+        char: Characteristic[CharacteristicType],
+        default: DEFAULT_TYPE = DEFAULT_MISSING,
+    ) -> CharacteristicType | DEFAULT_TYPE:
+        """Read data to from a characteristic."""
+        try:
+            return char.decode(await self.read_char_raw(char.uuid))
+        except CharacteristicNotFound:
+            if default is not DEFAULT_MISSING:
+                return default
+            raise
+
+    async def write_char_raw(self, uuid: str, data: bytes, response: bool = True):
+        async with self._client() as client:
+            """Write data to a characteristic."""
+            characteristic = client.services.get_characteristic(uuid)
+            if characteristic is None:
+                raise CharacteristicNotFound(f"Unable to find characteristic {uuid}")
+            if "write" not in characteristic.properties:
+                raise CharacteristicNoAccess(f"Characteristic {uuid} is not writable")
+            await client.write_gatt_char(characteristic, data, response=response)
+
+    async def write_char(
+        self,
+        char: Characteristic[CharacteristicType],
+        value: CharacteristicType,
+        response=True,
+    ) -> None:
+        """Write data to a characteristic."""
+        data = char.encode(value)
+        await self.write_char_raw(char.uuid, data, response)
+
+    async def update_timestamp(self, now: datetime):
+        try:
+            timestamp = await self.read_char(DeviceConfiguration.unix_timestamp)
+        except CharacteristicNoAccess:
+            LOGGER.debug("No timestamp defined for device")
+            return
+        timestamp = timestamp.replace(tzinfo=now.tzinfo)
+        delta = timestamp - now
+        if abs(delta.total_seconds()) > 60:
+            LOGGER.warning(
+                "Updating time on device to match local time delta was %s", delta
+            )
+            await self.write_char(
+                self,
+                DeviceConfiguration.unix_timestamp,
+                now.replace(tzinfo=None),
+                True,
+            )
+        else:
+            LOGGER.debug("No need to update timestamp local time delta was %s", delta)
+
+    async def get_all_characteristics_uuid(self) -> set[str]:
+        """Get all characteristics from device."""
+        async with self._client() as client:
+            characteristics = {
+                characteristic.uuid
+                for service in client.services
+                for characteristic in service.characteristics
+            }
+            LOGGER.debug("Characteristics: %s", characteristics)
+            return characteristics
