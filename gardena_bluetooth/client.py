@@ -6,17 +6,23 @@ from datetime import datetime
 from typing import TypeVar, overload
 
 from bleak import BleakClient
+from bleak.exc import BleakError
 from bleak.backends.device import BLEDevice
 from bleak_retry_connector import establish_connection
 
 from .const import DeviceConfiguration
-from .exceptions import CharacteristicNoAccess, CharacteristicNotFound
+from .exceptions import (
+    CharacteristicNoAccess,
+    CharacteristicNotFound,
+    CommunicationFailure,
+)
 from .parse import Characteristic, CharacteristicType
 
 LOGGER = logging.getLogger(__name__)
 DEFAULT_MISSING = object()
 DEFAULT_TYPE = TypeVar("DEFAULT_TYPE")
 DEFAULT_DELAY = 1
+
 
 class CallLaterJob:
     """Helper to contain a function that is to be called later."""
@@ -94,23 +100,28 @@ class CachedClient:
         """Retrieve a context manager for a cached client."""
         self._disconnect_job.cancel()
 
-        async with self._lock:
-            if not (client := self._client) or not client.is_connected:
-                client = await self._connect()
+        try:
+            async with self._lock:
+                if not (client := self._client) or not client.is_connected:
+                    client = await self._connect()
 
-            self._count += 1
-            try:
-                yield client
-            except:
-                LOGGER.debug("Disconnecting client due to exception")
-                await self._disconnect_job.call_now()
-                raise
+                self._count += 1
+                try:
+                    yield client
+                except:
+                    LOGGER.debug("Disconnecting client due to exception")
+                    await self._disconnect_job.call_now()
+                    raise
 
-            finally:
-                self._count -= 1
+                finally:
+                    self._count -= 1
 
-                if not self._count and self._client:
-                    self._disconnect_job.call_later(self._disconnect_delay)
+                    if not self._count and self._client:
+                        self._disconnect_job.call_later(self._disconnect_delay)
+        except BleakError as exception:
+            raise CommunicationFailure(
+                f"Communcation failed with device: {exception}"
+            ) from exception
 
 
 class Client:

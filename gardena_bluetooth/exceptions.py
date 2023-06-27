@@ -8,3 +8,6 @@ class CharacteristicNoAccess(GardenaBluetoothException):
 
 class CharacteristicNotFound(CharacteristicNoAccess):
     pass
+
+class CommunicationFailure(GardenaBluetoothException):
+    pass
