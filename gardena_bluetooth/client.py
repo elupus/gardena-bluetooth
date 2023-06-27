@@ -60,7 +60,7 @@ class CallLaterJob:
         self._cancel = asyncio.get_event_loop().call_later(delay, _call)
 
 
-class CachedClient:
+class CachedConnection:
     """Recursive and delay closed client."""
 
     def __init__(
@@ -125,11 +125,11 @@ class CachedClient:
 
 
 class Client:
-    def __init__(self, client_or_device: CachedClient | BLEDevice) -> None:
-        if isinstance(client_or_device, CachedClient):
+    def __init__(self, client_or_device: CachedConnection | BLEDevice) -> None:
+        if isinstance(client_or_device, CachedConnection):
             self._client = client_or_device
         else:
-            self._client = CachedClient(DEFAULT_DELAY, lambda: client_or_device)
+            self._client = CachedConnection(DEFAULT_DELAY, lambda: client_or_device)
 
     async def disconnect(self):
         await self._client.disconnect()
