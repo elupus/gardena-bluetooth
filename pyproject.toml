@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gardena-bluetooth"
-version = "0.5.0"
+version = "1.0.0"
 description = ""
 authors = ["Joakim Plate <elupus@ecce.se>"]
 readme = "README.rst"
