@@ -216,7 +216,6 @@ class Client:
                 "Updating time on device to match local time delta was %s", delta
             )
             await self.write_char(
-                self,
                 DeviceConfiguration.unix_timestamp,
                 now.replace(tzinfo=None),
                 True,
