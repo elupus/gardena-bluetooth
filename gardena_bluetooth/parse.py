@@ -51,7 +51,7 @@ class CharacteristicBool(Characteristic[bool]):
         return data[0] != 0
 
     @classmethod
-    def encode(data: bool) -> bytes:
+    def encode(cls, data: bool) -> bytes:
         if data:
             return b"\x01"
         return b"\x00"
