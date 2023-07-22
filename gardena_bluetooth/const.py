@@ -116,3 +116,8 @@ class Reset(Service):
     uuid = "98bdff00-0b0e-421a-84e5-ddbf75dc6de4"
 
     factory_reset = CharacteristicBool("98bdff01-0b0e-421a-84e5-ddbf75dc6de4")
+
+class Oad(Service):
+    uuid = "f000ffd0-0451-4000-b000-000000000000"
+
+    enable_oad = CharacteristicBool("f000ffd1-0451-4000-b000-000000000000")
