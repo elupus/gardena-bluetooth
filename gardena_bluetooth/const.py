@@ -121,3 +121,10 @@ class Oad(Service):
     uuid = "f000ffd0-0451-4000-b000-000000000000"
 
     enable_oad = CharacteristicBool("f000ffd1-0451-4000-b000-000000000000")
+
+class Fota(Service):
+    uuid = "f000ffc0-0451-4000-b000-000000000000"
+
+    image_identify = CharacteristicBytes("f000ffc1-0451-4000-b000-000000000000")
+    image_block_id = CharacteristicBytes("f000ffc2-0451-4000-b000-000000000000")
+    control_point = CharacteristicBytes("f000ffc5-0451-4000-b000-000000000000")
