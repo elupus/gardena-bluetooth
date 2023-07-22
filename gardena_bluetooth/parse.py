@@ -69,6 +69,17 @@ class CharacteristicString(Characteristic[str]):
 
 
 @dataclass
+class CharacteristicNullString(Characteristic[str]):
+    @classmethod
+    def decode(cls, data: bytes) -> str:
+        return data.partition("b\x00")[0].decode("ASCII")
+
+    @classmethod
+    def encode(cls, value: str) -> bytes:
+        return value.encode("ASCII")
+
+
+@dataclass
 class CharacteristicInt(Characteristic[int]):
     @classmethod
     def decode(cls, data: bytes) -> int:
@@ -105,7 +116,10 @@ class CharacteristicUInt16(Characteristic[int]):
 class CharacteristicLongArray(Characteristic[list[int]]):
     @classmethod
     def decode(cls, data: bytes) -> list[int]:
-        return [int.from_bytes(data[i : i + 4]) for i in range(0, len(data), 4)]
+        return [
+            int.from_bytes(data[i : i + 4], "little", signed=True)
+            for i in range(0, len(data), 4)
+        ]
 
 
 @dataclass
