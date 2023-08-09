@@ -10,7 +10,15 @@ from .parse import (
     CharacteristicTimeArray,
     CharacteristicUInt16,
     Service,
+    ProductType,
 )
+
+PRODUCT_NAMES = {
+    ProductType.PUMP: "Gardena Garden Pump",
+    ProductType.WATER_COMPUTER: "Gardena Water Computer",
+    ProductType.VALVE: "Gardena Irrigation Valve",
+    ProductType.MOWER: "Gardena Mower"
+}
 
 ScanService = "98bd0001-0b0e-421a-84e5-ddbf75dc6de4"
 FotaService = "0000ffc0-0000-1000-8000-00805f9b34fb"
