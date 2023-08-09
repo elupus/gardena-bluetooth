@@ -24,7 +24,7 @@ cli = ["asyncclick"]
 test = ["asyncclick", "pytest-asyncio", "black", "ruff"]
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=1.1.0a6"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.init_options]
