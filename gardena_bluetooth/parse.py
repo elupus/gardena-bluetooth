@@ -1,12 +1,30 @@
 from dataclasses import dataclass
 from datetime import datetime
-from enum import IntEnum
+from enum import IntEnum, Enum, auto
 from typing import ClassVar, Generic, TypeVar
 
 
 def pretty_name(name: str):
     data = name.split("_")
     return " ".join(f"{part[0].upper()}{part[1:]}" for part in data)
+
+class ProductType(Enum):
+    MOWER = auto()
+    WATER_COMPUTER = auto()
+    VALVE = auto()
+    PUMP = auto()
+
+    @staticmethod
+    def from_manufacturer_data(data: 'ManufacturerData') -> 'ProductType':
+        if data.group == 10:
+            return ProductType.MOWER
+        if data.group == 18 and data.model in (0, 1) and data.variant == 1:
+            return ProductType.WATER_COMPUTER
+        if data.group == 18 and data.model == 2 and data.variant == 1:
+            return ProductType.VALVE
+        if data.group == 17 and data.model == 1:
+            return ProductType.PUMP
+        return None
 
 
 CharacteristicType = TypeVar("CharacteristicType")
