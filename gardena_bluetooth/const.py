@@ -47,8 +47,8 @@ class Valve(Service):
 class DeviceConfiguration(Service):
     uuid = "98bd0b10-0b0e-421a-84e5-ddbf75dc6de4"
 
-    rain_pause = CharacteristicInt("98bd0b11-0b0e-421a-84e5-ddbf75dc6de4")
-    season_pause = CharacteristicLong("98bd0b12-0b0e-421a-84e5-ddbf75dc6de4")
+    rain_pause = CharacteristicLong("98bd0b11-0b0e-421a-84e5-ddbf75dc6de4")
+    seasonal_adjust = CharacteristicInt("98bd0b12-0b0e-421a-84e5-ddbf75dc6de4") 
     unix_timestamp = CharacteristicTime("98bd0b13-0b0e-421a-84e5-ddbf75dc6de4")
     mobile_device_name = CharacteristicInt("98bd0b14-0b0e-421a-84e5-ddbf75dc6de4")
     device_language = CharacteristicInt("98bd0b15-0b0e-421a-84e5-ddbf75dc6de4")
