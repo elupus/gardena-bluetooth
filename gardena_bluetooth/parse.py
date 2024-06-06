@@ -8,6 +8,7 @@ def pretty_name(name: str):
     data = name.split("_")
     return " ".join(f"{part[0].upper()}{part[1:]}" for part in data)
 
+
 class ProductType(Enum):
     MOWER = auto()
     WATER_COMPUTER = auto()
@@ -15,7 +16,7 @@ class ProductType(Enum):
     PUMP = auto()
 
     @staticmethod
-    def from_manufacturer_data(data: 'ManufacturerData') -> 'ProductType':
+    def from_manufacturer_data(data: "ManufacturerData") -> "ProductType":
         if data.group == 10:
             return ProductType.MOWER
         if data.group == 18 and data.model in (0, 1) and data.variant == 1:

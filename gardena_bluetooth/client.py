@@ -132,14 +132,12 @@ class Client:
         await self._client.disconnect()
 
     @overload
-    async def read_char_raw(self, uuid: str) -> bytes:
-        ...
+    async def read_char_raw(self, uuid: str) -> bytes: ...
 
     @overload
     async def read_char_raw(
         self, uuid: str, default: DEFAULT_TYPE
-    ) -> bytes | DEFAULT_TYPE:
-        ...
+    ) -> bytes | DEFAULT_TYPE: ...
 
     async def read_char_raw(
         self, uuid: str, default: DEFAULT_TYPE = DEFAULT_MISSING
@@ -159,16 +157,14 @@ class Client:
     @overload
     async def read_char(
         self, char: Characteristic[CharacteristicType]
-    ) -> CharacteristicType:
-        ...
+    ) -> CharacteristicType: ...
 
     @overload
     async def read_char(
         self,
         char: Characteristic[CharacteristicType],
         default: DEFAULT_TYPE,
-    ) -> CharacteristicType | DEFAULT_TYPE:
-        ...
+    ) -> CharacteristicType | DEFAULT_TYPE: ...
 
     async def read_char(
         self,
