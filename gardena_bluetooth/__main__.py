@@ -1,7 +1,12 @@
 import anyio
 import asyncclick as click
-from bleak import (AdvertisementData, BleakClient, BleakGATTCharacteristic,
-                   BleakScanner, BLEDevice)
+from bleak import (
+    AdvertisementData,
+    BleakClient,
+    BleakGATTCharacteristic,
+    BleakScanner,
+    BLEDevice,
+)
 from bleak.uuids import uuidstr_to_str
 
 from .const import FotaService, ScanService

@@ -1,19 +1,9 @@
 repos:
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.0.262
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.7
     hooks:
       - id: ruff
         args:
           - --fix
-  - repo: https://github.com/psf/black
-    rev: 23.3.0
-    hooks:
-      - id: black
-        args:
-          - --quiet
-        files: ^((homeassistant|pylint|script|tests)/.+)?[^/]+\.py$
-
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.0.272
-    hooks:
-      - id: ruff
+      - id: ruff-format
+        files: ^((gardena_bluetooth|tests)/.+)?[^/]+\.(py|pyi)$
