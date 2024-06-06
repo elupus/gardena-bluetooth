@@ -18,7 +18,7 @@ PRODUCT_NAMES = {
     ProductType.PUMP: "Gardena Garden Pump",
     ProductType.WATER_COMPUTER: "Gardena Water Computer",
     ProductType.VALVE: "Gardena Irrigation Valve",
-    ProductType.MOWER: "Gardena Mower"
+    ProductType.MOWER: "Gardena Mower",
 }
 
 ScanService = "98bd0001-0b0e-421a-84e5-ddbf75dc6de4"
@@ -49,13 +49,15 @@ class DeviceConfiguration(Service):
     uuid = "98bd0b10-0b0e-421a-84e5-ddbf75dc6de4"
 
     rain_pause = CharacteristicLong("98bd0b11-0b0e-421a-84e5-ddbf75dc6de4")
-    seasonal_adjust = CharacteristicInt("98bd0b12-0b0e-421a-84e5-ddbf75dc6de4") 
+    seasonal_adjust = CharacteristicInt("98bd0b12-0b0e-421a-84e5-ddbf75dc6de4")
     unix_timestamp = CharacteristicTime("98bd0b13-0b0e-421a-84e5-ddbf75dc6de4")
     mobile_device_name = CharacteristicInt("98bd0b14-0b0e-421a-84e5-ddbf75dc6de4")
     device_language = CharacteristicInt("98bd0b15-0b0e-421a-84e5-ddbf75dc6de4")
     display_brightness = CharacteristicInt("98bd0b16-0b0e-421a-84e5-ddbf75dc6de4")
     first_user_start = CharacteristicBool("98bd0b17-0b0e-421a-84e5-ddbf75dc6de4")
-    custom_device_name = CharacteristicNullStringUf8("98bd0b18-0b0e-421a-84e5-ddbf75dc6de4")
+    custom_device_name = CharacteristicNullStringUf8(
+        "98bd0b18-0b0e-421a-84e5-ddbf75dc6de4"
+    )
 
 
 class DeviceInformation(Service):
@@ -126,10 +128,12 @@ class Reset(Service):
 
     factory_reset = CharacteristicBool("98bdff01-0b0e-421a-84e5-ddbf75dc6de4")
 
+
 class Oad(Service):
     uuid = "f000ffd0-0451-4000-b000-000000000000"
 
     enable_oad = CharacteristicBool("f000ffd1-0451-4000-b000-000000000000")
+
 
 class Fota(Service):
     uuid = "f000ffc0-0451-4000-b000-000000000000"
