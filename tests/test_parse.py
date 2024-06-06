@@ -1,4 +1,4 @@
-from gardena_bluetooth.parse import ManufacturerData, ProductGroup, ProductType
+from gardena_bluetooth.parse import ManufacturerData, ProductGroup, ProductType, CharacteristicString
 
 
 def test_manufacturer_data():
@@ -19,3 +19,9 @@ def test_manufacturer_data():
     )
 
     assert ProductType.from_manufacturer_data(data) is None
+
+
+def test_string_firmware_invalid():
+    raw = (b"abc\xe4")
+    data = CharacteristicString.decode(raw)
+    assert data == "abc�"

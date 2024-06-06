@@ -7,6 +7,7 @@ from .parse import (
     CharacteristicString,
     CharacteristicTime,
     CharacteristicNullString,
+    CharacteristicNullStringUf8,
     CharacteristicTimeArray,
     CharacteristicUInt16,
     Service,
@@ -54,7 +55,7 @@ class DeviceConfiguration(Service):
     device_language = CharacteristicInt("98bd0b15-0b0e-421a-84e5-ddbf75dc6de4")
     display_brightness = CharacteristicInt("98bd0b16-0b0e-421a-84e5-ddbf75dc6de4")
     first_user_start = CharacteristicBool("98bd0b17-0b0e-421a-84e5-ddbf75dc6de4")
-    custom_device_name = CharacteristicString("98bd0b18-0b0e-421a-84e5-ddbf75dc6de4")
+    custom_device_name = CharacteristicNullStringUf8("98bd0b18-0b0e-421a-84e5-ddbf75dc6de4")
 
 
 class DeviceInformation(Service):
