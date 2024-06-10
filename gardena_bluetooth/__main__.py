@@ -10,7 +10,7 @@ from bleak import (
 from bleak.uuids import uuidstr_to_str
 
 from .const import FotaService, ScanService
-from .parse import Characteristic
+from .parse import Characteristic, ManufacturerData
 
 
 @click.group()
@@ -35,6 +35,11 @@ async def scan():
             click.echo(f" - Service: {service} {uuidstr_to_str(service)}")
         click.echo(f" - Data: {advertisement.service_data}")
         click.echo(f" - Manu: {advertisement.manufacturer_data}")
+
+        if data := advertisement.manufacturer_data.get(ManufacturerData.company):
+            decoded = ManufacturerData.decode(data)
+            click.echo(f" -     : {decoded}")
+
         click.echo(f" - RSSI: {advertisement.rssi}")
         click.echo()
 
