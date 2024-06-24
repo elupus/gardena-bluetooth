@@ -8,6 +8,9 @@ packages = [
     {include = "gardena_bluetooth"},
     {include = "gardena_bluetooth/py.typed"},
 ]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+]
 
 [tool.poetry.dependencies]
 python = "^3.10"
