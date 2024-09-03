@@ -3,6 +3,8 @@ from gardena_bluetooth.parse import (
     ProductGroup,
     ProductType,
     CharacteristicString,
+    CharacteristicNullStringUf8,
+    CharacteristicNullString,
 )
 
 
@@ -31,3 +33,15 @@ def test_string_firmware_invalid():
     raw = b"abc\xe4"
     data = CharacteristicString.decode(raw)
     assert data == "abc�"
+
+
+def test_string_nulled_utf8():
+    raw = "åäö".encode("utf-8") + b"\x00junk"
+    data = CharacteristicNullStringUf8.decode(raw)
+    assert data == "åäö"
+
+
+def test_string_nulled():
+    raw = b"abc\x00junk"
+    data = CharacteristicNullString.decode(raw)
+    assert data == "abc"
