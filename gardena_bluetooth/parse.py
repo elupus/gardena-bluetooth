@@ -91,7 +91,7 @@ class CharacteristicString(Characteristic[str]):
 class CharacteristicNullString(Characteristic[str]):
     @classmethod
     def decode(cls, data: bytes) -> str:
-        return data.partition("b\x00")[0].decode("ASCII", "replace")
+        return data.partition(b"\x00")[0].decode("ASCII", "replace")
 
     @classmethod
     def encode(cls, value: str) -> bytes:
@@ -102,7 +102,7 @@ class CharacteristicNullString(Characteristic[str]):
 class CharacteristicNullStringUf8(Characteristic[str]):
     @classmethod
     def decode(cls, data: bytes) -> str:
-        return data.partition("b\x00")[0].decode("utf-8", "replace")
+        return data.partition(b"\x00")[0].decode("utf-8", "replace")
 
     @classmethod
     def encode(cls, value: str) -> bytes:
