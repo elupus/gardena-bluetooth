@@ -8,6 +8,7 @@ packages = [
     {include = "gardena_bluetooth"},
     {include = "gardena_bluetooth/py.typed"},
 ]
+license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.10"
