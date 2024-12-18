@@ -23,7 +23,7 @@ class ProductType(Enum):
             return ProductType.WATER_COMPUTER
         if data.group == 18 and data.model == 2 and data.variant == 1:
             return ProductType.VALVE
-        if data.group == 17 and data.model == 1:
+        if data.group == 17 and data.model in (1, 2):
             return ProductType.PUMP
         return None
 

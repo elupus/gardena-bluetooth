@@ -28,6 +28,17 @@ def test_manufacturer_data():
 
     assert ProductType.from_manufacturer_data(data) is None
 
+    raw = (
+        b"\x05\x04\x14\x18\x00\x00\x02\x05\x01\x04\x06\x11\x02\x02"
+        b"\t\x01\x04\x06\x20\x00\x01\x05\x04\x01\x02\x03\x04"
+    )
+    data = ManufacturerData.decode(raw)
+    assert data == ManufacturerData(
+        pairable=True, serial=6164, group=17, model=2, variant=2
+    )
+
+    assert ProductType.from_manufacturer_data(data) is ProductType.PUMP
+
 
 def test_string_firmware_invalid():
     raw = b"abc\xe4"
