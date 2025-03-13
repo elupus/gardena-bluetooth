@@ -14,17 +14,33 @@ class ProductType(Enum):
     WATER_COMPUTER = auto()
     VALVE = auto()
     PUMP = auto()
+    PRESSURE_TANKS = auto()
+    AQUA_CONTOURS = auto()
+    AUTOMATS = auto()
 
     @staticmethod
     def from_manufacturer_data(data: "ManufacturerData") -> "ProductType":
         if data.group == 10:
             return ProductType.MOWER
-        if data.group == 18 and data.model in (0, 1) and data.variant == 1:
-            return ProductType.WATER_COMPUTER
-        if data.group == 18 and data.model == 2 and data.variant == 1:
-            return ProductType.VALVE
-        if data.group == 17 and data.model in (1, 2):
-            return ProductType.PUMP
+
+        if data.group == 18:
+            if data.model in (0, 1) and data.variant == 1:
+                return ProductType.WATER_COMPUTER
+            if data.model == 2 and data.variant == 1:
+                return ProductType.VALVE
+            if data.model == 16:
+                return ProductType.AQUA_CONTOURS
+            return None
+
+        if data.group == 17:
+            if data.model == 1:
+                return ProductType.PUMP
+            if data.model == 2:
+                return ProductType.PRESSURE_TANKS
+            if data.model == 3:
+                return ProductType.AUTOMATS
+            return None
+
         return None
 
 

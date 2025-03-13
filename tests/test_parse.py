@@ -37,7 +37,7 @@ def test_manufacturer_data():
         pairable=True, serial=6164, group=17, model=2, variant=2
     )
 
-    assert ProductType.from_manufacturer_data(data) is ProductType.PUMP
+    assert ProductType.from_manufacturer_data(data) is ProductType.PRESSURE_TANKS
 
 
 def test_string_firmware_invalid():
