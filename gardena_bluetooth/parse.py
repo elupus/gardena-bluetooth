@@ -215,7 +215,7 @@ class EnumOrInt(IntEnum):
 
 
 class ProductGroup(EnumOrInt):
-    MOWER = 1
+    MOWER = 10
     GARDEN_PUMP = 17
     WATER_CONTROL = 18
 
