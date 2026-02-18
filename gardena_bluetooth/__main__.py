@@ -1,4 +1,4 @@
-import anyio
+import asyncio
 import asyncclick as click
 from bleak import (
     AdvertisementData,
@@ -44,7 +44,8 @@ async def scan():
         click.echo()
 
     async with BleakScanner(detected, service_uuids=[ScanService, FotaService]):
-        await anyio.sleep_forever()
+        while True:
+            await asyncio.sleep(1)
 
 
 @main.command()
@@ -66,9 +67,9 @@ async def connect(address: str):
                 if data is not None and parser:
                     click.echo(f" -  Data: {parser.decode(data)}")
 
-            async with anyio.create_task_group() as tg:
+            async with asyncio.TaskGroup() as tg:
                 for char in service.characteristics:
-                    tg.start_soon(read_print, char)
+                    tg.create_task(read_print(char))
 
 
 @main.command()
