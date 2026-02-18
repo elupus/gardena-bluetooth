@@ -10,7 +10,7 @@ from bleak import (
 from bleak.uuids import uuidstr_to_str
 
 from .const import FotaService, ScanService
-from .parse import Characteristic, ManufacturerData
+from .parse import Characteristic, ManufacturerData, Service
 
 
 @click.group()
@@ -56,16 +56,23 @@ async def connect(address: str):
         for service in client.services:
             click.echo(f"Service: {service}")
 
+            service_parser = Service.registry.get(service.uuid)
+
             async def read_print(char: BleakGATTCharacteristic):
-                parser = Characteristic.registry.get(char.uuid)
                 if "read" in char.properties:
                     data = await client.read_gatt_char(char.uuid)
                 else:
                     data = None
                 click.echo(f" -  {char}")
-                click.echo(f" -  {char.properties}")
-                if data is not None and parser:
-                    click.echo(f" -  Data: {parser.decode(data)}")
+                click.echo(f"    Prop: {char.properties}")
+
+                if data is not None:
+                    if service_parser and (
+                        parser := service_parser[0].characteristics.get(char.uuid)
+                    ):
+                        click.echo(f"    Data: {parser.decode(data)}")
+                    else:
+                        click.echo(f"    Data: {data}")
 
             async with asyncio.TaskGroup() as tg:
                 for char in service.characteristics:
