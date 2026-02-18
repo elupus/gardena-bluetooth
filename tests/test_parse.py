@@ -26,7 +26,7 @@ def test_manufacturer_data():
         pairable=True, serial=0x04030201, group=32, model=0, variant=1
     )
 
-    assert ProductType.from_manufacturer_data(data) is None
+    assert ProductType.from_manufacturer_data(data) is ProductType.UNKNOWN
 
     raw = (
         b"\x05\x04\x14\x18\x00\x00\x02\x05\x01\x04\x06\x11\x02\x02"

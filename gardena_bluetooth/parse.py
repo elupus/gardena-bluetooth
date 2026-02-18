@@ -10,6 +10,7 @@ def pretty_name(name: str):
 
 
 class ProductType(Enum):
+    UNKNOWN = auto()
     MOWER = auto()
     WATER_COMPUTER = auto()
     VALVE = auto()
@@ -30,7 +31,7 @@ class ProductType(Enum):
                 return ProductType.VALVE
             if data.model == 16:
                 return ProductType.AQUA_CONTOURS
-            return None
+            return ProductType.UNKNOWN
 
         if data.group == 17:
             if data.model == 1:
@@ -39,9 +40,9 @@ class ProductType(Enum):
                 return ProductType.PRESSURE_TANKS
             if data.model == 3:
                 return ProductType.AUTOMATS
-            return None
+            return ProductType.UNKNOWN
 
-        return None
+        return ProductType.UNKNOWN
 
 
 CharacteristicType = TypeVar("CharacteristicType")
@@ -192,8 +193,17 @@ class CharacteristicTimeArray(Characteristic[list[datetime]]):
 
 class Service:
     uuid: ClassVar[str]
+    products: ClassVar[set[ProductType]] = set(ProductType)
     registry: ClassVar[dict[str, list[Self]]] = {}
     characteristics: ClassVar[dict[str, Characteristic]] = {}
+
+    @classmethod
+    def find_service(cls, uuid: str, product_type: ProductType) -> Self | None:
+        services = cls.registry.get(uuid, [])
+        for service in services:
+            if product_type in service.products:
+                return service
+        return None
 
     def __init_subclass__(cls, /, **kwargs):
         super().__init_subclass__(**kwargs)

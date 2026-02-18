@@ -47,6 +47,7 @@ class Valve(Service):
 
 class DeviceConfiguration(Service):
     uuid = "98bd0b10-0b0e-421a-84e5-ddbf75dc6de4"
+    products = set(ProductType) - {ProductType.AQUA_CONTOURS}
 
     rain_pause = CharacteristicLong("98bd0b11-0b0e-421a-84e5-ddbf75dc6de4")
     seasonal_adjust = CharacteristicInt("98bd0b12-0b0e-421a-84e5-ddbf75dc6de4")
@@ -58,6 +59,41 @@ class DeviceConfiguration(Service):
     custom_device_name = CharacteristicNullStringUf8(
         "98bd0b18-0b0e-421a-84e5-ddbf75dc6de4"
     )
+
+
+class AquaContourContours(Service):
+    uuid = "98bd0b10-0b0e-421a-84e5-ddbf75dc6de4"
+    products = {ProductType.AQUA_CONTOURS}
+
+    contour_receive = CharacteristicBytes("98bd0b11-0b0e-421a-84e5-ddbf75dc6de4")
+    contour_transmit = CharacteristicBytes("98bd0b12-0b0e-421a-84e5-ddbf75dc6de4")
+    contour_info = CharacteristicBytes("98bd0b13-0b0e-421a-84e5-ddbf75dc6de4")
+    contour_name_1 = CharacteristicNullStringUf8("98bd0b1a-0b0e-421a-84e5-ddbf75dc6de4")
+    contour_name_2 = CharacteristicNullStringUf8("98bd0b1b-0b0e-421a-84e5-ddbf75dc6de4")
+    contour_name_3 = CharacteristicNullStringUf8("98bd0b1c-0b0e-421a-84e5-ddbf75dc6de4")
+    contour_name_4 = CharacteristicNullStringUf8("98bd0b1d-0b0e-421a-84e5-ddbf75dc6de4")
+    contour_name_5 = CharacteristicNullStringUf8("98bd0b1e-0b0e-421a-84e5-ddbf75dc6de4")
+
+
+class AquaContourSchedule(Service):
+    uuid = "98bd0c10-0b0e-421a-84e5-ddbf75dc6de4"
+    products = {ProductType.AQUA_CONTOURS}
+
+    schedule_1 = CharacteristicBytes("98bd0c11-0b0e-421a-84e5-ddbf75dc6de4")
+    schedule_2 = CharacteristicBytes("98bd0c12-0b0e-421a-84e5-ddbf75dc6de4")
+    schedule_3 = CharacteristicBytes("98bd0c13-0b0e-421a-84e5-ddbf75dc6de4")
+    schedule_4 = CharacteristicBytes("98bd0c14-0b0e-421a-84e5-ddbf75dc6de4")
+    schedule_5 = CharacteristicBytes("98bd0c15-0b0e-421a-84e5-ddbf75dc6de4")
+    schedule_6 = CharacteristicBytes("98bd0c16-0b0e-421a-84e5-ddbf75dc6de4")
+    schedule_7 = CharacteristicBytes("98bd0c17-0b0e-421a-84e5-ddbf75dc6de4")
+    schedule_8 = CharacteristicBytes("98bd0c18-0b0e-421a-84e5-ddbf75dc6de4")
+    schedule_9 = CharacteristicBytes("98bd0c19-0b0e-421a-84e5-ddbf75dc6de4")
+    schedule_10 = CharacteristicBytes("98bd0c1a-0b0e-421a-84e5-ddbf75dc6de4")
+    schedule_11 = CharacteristicBytes("98bd0c1b-0b0e-421a-84e5-ddbf75dc6de4")
+    schedule_12 = CharacteristicBytes("98bd0c1c-0b0e-421a-84e5-ddbf75dc6de4")
+    schedule_13 = CharacteristicBytes("98bd0c1d-0b0e-421a-84e5-ddbf75dc6de4")
+    schedule_14 = CharacteristicBytes("98bd0c1e-0b0e-421a-84e5-ddbf75dc6de4")
+    schedule_15 = CharacteristicBytes("98bd0c1f-0b0e-421a-84e5-ddbf75dc6de4")
 
 
 class DeviceInformation(Service):
@@ -92,6 +128,12 @@ class WateringHistory(Service):
     timestamp_count = CharacteristicInt("98bd0d12-0b0e-421a-84e5-ddbf75dc6de4")
     skip_reason = CharacteristicBytes("98bd0d13-0b0e-421a-84e5-ddbf75dc6de4")
     watering_duration = CharacteristicLongArray("98bd0d14-0b0e-421a-84e5-ddbf75dc6de4")
+    watering_skipped = CharacteristicBool("98bd0d15-0b0e-421a-84e5-ddbf75dc6de4")
+    skipped_schedule_number = CharacteristicInt("98bd0d16-0b0e-421a-84e5-ddbf75dc6de4")
+    water_control_error = CharacteristicInt("98bd0d17-0b0e-421a-84e5-ddbf75dc6de4")
+    watering_pause = CharacteristicLong("98bd0d18-0b0e-421a-84e5-ddbf75dc6de4")
+    seasonal_adjust = CharacteristicInt("98bd0d19-0b0e-421a-84e5-ddbf75dc6de4")
+    rain_sensitivity = CharacteristicInt("98bd0d1a-0b0e-421a-84e5-ddbf75dc6de4")
 
 
 class ErrorHistory(Service):
@@ -121,6 +163,66 @@ class Pump(Service):
     error_code = CharacteristicBytes("98bd010f-0b0e-421a-84e5-ddbf75dc6de4")
     user_motor_runtime = CharacteristicLong("98bd0110-0b0e-421a-84e5-ddbf75dc6de4")
     total_motor_runtime = CharacteristicLong("98bd0111-0b0e-421a-84e5-ddbf75dc6de4")
+
+
+class Spray(Service):
+    uuid = "98bd0110-0b0e-421a-84e5-ddbf75dc6de4"
+    distance = CharacteristicInt("98bd0111-0b0e-421a-84e5-ddbf75dc6de4")
+    sector = CharacteristicInt("98bd0112-0b0e-421a-84e5-ddbf75dc6de4")
+    current_distance = CharacteristicInt("98bd0113-0b0e-421a-84e5-ddbf75dc6de4")
+    current_sector = CharacteristicInt("98bd0114-0b0e-421a-84e5-ddbf75dc6de4")
+    watering_mode_error = CharacteristicInt("98bd0115-0b0e-421a-84e5-ddbf75dc6de4")
+
+
+class EventHistory(Service):
+    uuid = "98bd0120-0b0e-421a-84e5-ddbf75dc6de4"
+    history = CharacteristicBytes("98bd0121-0b0e-421a-84e5-ddbf75dc6de4")
+    error = CharacteristicBytes("98bd0122-0b0e-421a-84e5-ddbf75dc6de4")
+
+
+class AquaContour(Service):
+    uuid = "98bd0a10-0b0e-421a-84e5-ddbf75dc6de4"
+    unix_timestamp = CharacteristicTime("98bd0a11-0b0e-421a-84e5-ddbf75dc6de4")
+    custom_device_name = CharacteristicNullStringUf8(
+        "98bd0a12-0b0e-421a-84e5-ddbf75dc6de4"
+    )
+    frost_warning = CharacteristicBool("98bd0a15-0b0e-421a-84e5-ddbf75dc6de4")
+    active_contour = CharacteristicBytes("98bd0a16-0b0e-421a-84e5-ddbf75dc6de4")
+
+
+class FlowStatistics(Service):
+    uuid = "98bd0e10-0b0e-421a-84e5-ddbf75dc6de4"
+    overall = CharacteristicLong("98bd0e16-0b0e-421a-84e5-ddbf75dc6de4")
+    resettable = CharacteristicLong("98bd0e17-0b0e-421a-84e5-ddbf75dc6de4")
+    last_reset = CharacteristicTime("98bd0e18-0b0e-421a-84e5-ddbf75dc6de4")
+    current = CharacteristicInt("98bd0e19-0b0e-421a-84e5-ddbf75dc6de4")
+
+
+class AquaContourPosition(Service):
+    uuid = "98bd0130-0b0e-421a-84e5-ddbf75dc6de4"
+    active_position = CharacteristicInt("98bd0132-0b0e-421a-84e5-ddbf75dc6de4")
+    position_mask = CharacteristicBytes("98bd0135-0b0e-421a-84e5-ddbf75dc6de4")
+    position_name_1 = CharacteristicNullStringUf8(
+        "98bd013a-0b0e-421a-84e5-ddbf75dc6de4"
+    )
+    position_name_2 = CharacteristicNullStringUf8(
+        "98bd013b-0b0e-421a-84e5-ddbf75dc6de4"
+    )
+    position_name_3 = CharacteristicNullStringUf8(
+        "98bd013c-0b0e-421a-84e5-ddbf75dc6de4"
+    )
+    position_name_4 = CharacteristicNullStringUf8(
+        "98bd013d-0b0e-421a-84e5-ddbf75dc6de4"
+    )
+    position_name_5 = CharacteristicNullStringUf8(
+        "98bd013e-0b0e-421a-84e5-ddbf75dc6de4"
+    )
+
+
+class AquaContourBattery(Service):
+    uuid = "0000180f-0000-1000-8000-00805f9b34fb"
+    battery_level = CharacteristicInt("00002a19-0000-1000-8000-00805f9b34fb")
+    battery_level_status = CharacteristicInt("00002bed-0000-1000-8000-00805f9b34fb")
 
 
 class Reset(Service):

@@ -10,7 +10,7 @@ from bleak import (
 from bleak.uuids import uuidstr_to_str
 
 from .const import FotaService, ScanService
-from .parse import Characteristic, ManufacturerData, Service
+from .parse import Characteristic, ManufacturerData, ProductType, Service
 
 
 @click.group()
@@ -52,11 +52,29 @@ async def scan():
 @click.argument("address")
 async def connect(address: str):
     click.echo(f"Connecting to: {address}")
-    async with BleakClient(address, timeout=20) as client:
+    async with BleakScanner(service_uuids=[ScanService, FotaService]) as scanner:
+        async with asyncio.timeout(10):
+            async for device, data in scanner.advertisement_data():
+                if device.address != address:
+                    continue
+                if ManufacturerData.company not in data.manufacturer_data:
+                    click.echo("No manufacturer data found in advertisement")
+                    continue
+                break
+
+    manufacturer_data = ManufacturerData.decode(
+        data.manufacturer_data[ManufacturerData.company]
+    )
+    product_type = ProductType.from_manufacturer_data(manufacturer_data)
+
+    click.echo(f"Advertised data: {manufacturer_data}")
+    click.echo(f"Product type: {ProductType.from_manufacturer_data(manufacturer_data)}")
+
+    async with BleakClient(device, timeout=20) as client:
         for service in client.services:
             click.echo(f"Service: {service}")
 
-            service_parser = Service.registry.get(service.uuid)
+            service_parser = Service.find_service(service.uuid, product_type)
 
             async def read_print(char: BleakGATTCharacteristic):
                 if "read" in char.properties:
@@ -68,7 +86,7 @@ async def connect(address: str):
 
                 if data is not None:
                     if service_parser and (
-                        parser := service_parser[0].characteristics.get(char.uuid)
+                        parser := service_parser.characteristics.get(char.uuid)
                     ):
                         click.echo(f"    Data: {parser.decode(data)}")
                     else:
