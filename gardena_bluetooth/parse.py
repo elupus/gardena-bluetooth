@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from enum import IntEnum, Enum, auto
-from typing import ClassVar, Generic, TypeVar
+from typing import ClassVar, Generic, Self, TypeVar
 
 
 def pretty_name(name: str):
@@ -51,13 +51,13 @@ CharacteristicType = TypeVar("CharacteristicType")
 class Characteristic(Generic[CharacteristicType]):
     uuid: str
     name: str = ""
-    registry: ClassVar[dict[str, "Characteristic"]] = {}
+    registry: ClassVar[dict[str, list[Self]]] = {}
 
     def __set_name__(self, _, name: str):
         self.name = pretty_name(name)
 
     def __post_init__(self):
-        self.registry[self.uuid] = self
+        self.registry.setdefault(self.uuid, []).append(self)
 
     @classmethod
     def decode(cls, data: bytes) -> CharacteristicType:
@@ -192,17 +192,17 @@ class CharacteristicTimeArray(Characteristic[list[datetime]]):
 
 class Service:
     uuid: ClassVar[str]
-    registry: ClassVar[dict[str, "Service"]] = {}
+    registry: ClassVar[dict[str, list[Self]]] = {}
+    characteristics: ClassVar[dict[str, Characteristic]] = {}
 
     def __init_subclass__(cls, /, **kwargs):
         super().__init_subclass__(**kwargs)
-        cls.registry[cls.uuid] = cls
+        cls.registry.setdefault(cls.uuid, []).append(cls)
 
-    @classmethod
-    def characteristics(cls):
+        cls.characteristics = {}
         for value in vars(cls).values():
             if isinstance(value, Characteristic):
-                yield value
+                cls.characteristics[value.uuid] = value
 
 
 class EnumOrInt(IntEnum):

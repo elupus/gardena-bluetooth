@@ -3,20 +3,24 @@ from __future__ import annotations
 from bleak.uuids import register_uuids
 
 from .const import ScanService
-from .parse import Service
+from .parse import Service, Characteristic
+
+
+def prefix(name: str) -> str:
+    return f"Gardena {name}"
+
 
 register_uuids(
     {
-        service.uuid: f"Gardena {service.__name__}"
-        for service in Service.registry.values()
+        uuid: prefix(", ".join(service.__name__ for service in services))
+        for uuid, services in Service.registry.items()
     }
 )
 
 register_uuids(
     {
-        char.uuid: f"Gardena {service.__name__} {char.name}"
-        for service in Service.registry.values()
-        for char in service.characteristics()
+        uuid: prefix(", ".join(char.name for char in chars))
+        for uuid, chars in Characteristic.registry.items()
     }
 )
 
