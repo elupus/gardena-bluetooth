@@ -3,7 +3,7 @@ name = "gardena-bluetooth"
 version = "1.6.0"
 description = ""
 readme = "README.rst"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [
     {name = "Joakim Plate", email = "elupus@ecce.se"},
 ]
