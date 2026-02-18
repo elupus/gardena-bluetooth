@@ -19,6 +19,10 @@ PRODUCT_NAMES = {
     ProductType.WATER_COMPUTER: "Gardena Water Computer",
     ProductType.VALVE: "Gardena Irrigation Valve",
     ProductType.MOWER: "Gardena Mower",
+    ProductType.AQUA_CONTOURS: "Gardena Aqua Precise",
+    ProductType.AUTOMATS: "Gardena Automats",
+    ProductType.PRESSURE_TANKS: "Gardena Pressure Tanks",
+    ProductType.UNKNOWN: "Gardena Unknown Product",
 }
 
 ScanService = "98bd0001-0b0e-421a-84e5-ddbf75dc6de4"
