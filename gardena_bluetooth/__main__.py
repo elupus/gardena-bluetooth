@@ -58,13 +58,17 @@ async def connect(address: str):
                 if device.address != address:
                     continue
                 if ManufacturerData.company not in data.manufacturer_data:
-                    click.echo("No manufacturer data found in advertisement")
+                    click.echo("No manufacturer data found in advertisement skipping")
                     continue
+                manufacturer_data = ManufacturerData.decode(
+                    data.manufacturer_data[ManufacturerData.company]
+                )
+                if manufacturer_data.model is None:
+                    click.echo("No model found in manufacturer data skipping")
+                    continue
+
                 break
 
-    manufacturer_data = ManufacturerData.decode(
-        data.manufacturer_data[ManufacturerData.company]
-    )
     product_type = ProductType.from_manufacturer_data(manufacturer_data)
 
     click.echo(f"Advertised data: {manufacturer_data}")
