@@ -77,12 +77,20 @@ async def connect(address: str):
 
     async with BleakClient(device, timeout=20) as client:
         for service in client.services:
-            click.echo(f"Service: {service}")
-
             service_parser = Service.find_service(service.uuid, product_type)
 
+            click.echo(
+                f"Service: {service.uuid}: {service_parser.__name__ if service_parser else service.description}"
+            )
+
             for char in service.characteristics:
-                click.echo(f" -  {char}")
+                char_parser = None
+                if service_parser:
+                    char_parser = service_parser.characteristics.get(char.uuid)
+
+                click.echo(
+                    f" -  {char.uuid}: {char_parser.name if char_parser else char.description}"
+                )
                 click.echo(f"    Prop: {char.properties}")
 
                 data = None
@@ -93,10 +101,8 @@ async def connect(address: str):
                         click.echo(f"    Failed: {repr(exc)}")
 
                 if data is not None:
-                    if service_parser and (
-                        parser := service_parser.characteristics.get(char.uuid)
-                    ):
-                        click.echo(f"    Data: {parser.decode(data)}")
+                    if char_parser:
+                        click.echo(f"    Data: {char_parser.decode(data)}")
                     else:
                         click.echo(f"    Data: {data}")
 
