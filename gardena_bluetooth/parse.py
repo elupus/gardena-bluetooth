@@ -1,3 +1,4 @@
+from abc import ABC
 from dataclasses import dataclass
 from datetime import datetime
 from enum import IntEnum, Enum, auto
@@ -170,6 +171,22 @@ class CharacteristicLongArray(Characteristic[list[int]]):
 
 
 @dataclass
+class CharacteristicWeekday(Characteristic[list[bool]]):
+    @classmethod
+    def decode(cls, data: bytes) -> list[bool]:
+        value = int.from_bytes(data, "little", signed=False)
+        return [(value >> i) & 1 != 0 for i in range(7)]
+
+    @classmethod
+    def encode(cls, value: list[bool]) -> bytes:
+        int_value = 0
+        for i, day in enumerate(value):
+            if day:
+                int_value |= 1 << i
+        return int_value.to_bytes(1, "little", signed=False)
+
+
+@dataclass
 class CharacteristicTime(Characteristic[datetime]):
     @classmethod
     def decode(cls, data: bytes) -> datetime:
@@ -207,6 +224,8 @@ class Service:
 
     def __init_subclass__(cls, /, **kwargs):
         super().__init_subclass__(**kwargs)
+        if ABC in cls.__bases__:
+            return
         cls.registry.setdefault(cls.uuid, []).append(cls)
 
         cls.characteristics = {}
