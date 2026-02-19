@@ -32,10 +32,10 @@ FotaService = "0000ffc0-0000-1000-8000-00805f9b34fb"
 class Scan(Service):
     uuid = "98bd0001-0b0e-421a-84e5-ddbf75dc6de4"
 
-    write_characteristic = CharacteristicBytes("98BD0002-0B0E-421A-84E5-DDBF75DC6DE4")
-    read_characteristic = CharacteristicBytes("98BD0003-0B0E-421A-84E5-DDBF75DC6DE4")
+    write_characteristic = CharacteristicBytes("98bd0002-0b0e-421a-84e5-ddbf75dc6de4")
+    read_characteristic = CharacteristicBytes("98bd0003-0b0e-421a-84e5-ddbf75dc6de4")
     read_protocol_descriptor = CharacteristicNullString(
-        "98BD0004-0B0E-421A-84E5-DDBF75DC6DE4"
+        "98bd0004-0b0e-421a-84e5-ddbf75dc6de4"
     )
 
 
