@@ -52,27 +52,28 @@ async def scan():
 @click.argument("address")
 async def connect(address: str):
     click.echo(f"Connecting to: {address}")
+
+    manufacturer_data = ManufacturerData()
     async with BleakScanner(service_uuids=[ScanService, FotaService]) as scanner:
         async with asyncio.timeout(10):
             async for device, data in scanner.advertisement_data():
                 if device.address != address:
                     continue
-                if ManufacturerData.company not in data.manufacturer_data:
-                    click.echo("No manufacturer data found in advertisement skipping")
+
+                raw = data.manufacturer_data.get(ManufacturerData.company)
+                if raw is None:
                     continue
-                manufacturer_data = ManufacturerData.decode(
-                    data.manufacturer_data[ManufacturerData.company]
-                )
-                if manufacturer_data.model is None:
-                    click.echo("No model found in manufacturer data skipping")
+
+                manufacturer_data.update(raw)
+
+                product_type = ProductType.from_manufacturer_data(manufacturer_data)
+                if product_type is ProductType.UNKNOWN:
                     continue
 
                 break
 
-    product_type = ProductType.from_manufacturer_data(manufacturer_data)
-
     click.echo(f"Advertised data: {manufacturer_data}")
-    click.echo(f"Product type: {ProductType.from_manufacturer_data(manufacturer_data)}")
+    click.echo(f"Product type: {product_type}")
 
     async with BleakClient(device, timeout=20) as client:
         for service in client.services:

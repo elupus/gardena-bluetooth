@@ -45,22 +45,21 @@ def test_parse_manufacturer_data_aquaprecise():
     # while app is connection, this data is from same device in different
     # states. Could be bootloader state maybe?
 
+    data = ManufacturerData()
     raw = bytes.fromhex("0205000406121001")
-    data = ManufacturerData.decode(raw)
+    data.update(raw)
+
+    raw = bytes.fromhex("0504f162c103")
+    data.update(raw)
+
     assert data == ManufacturerData(
         pairable=False,
-        serial=None,
+        serial=63005425,
         group=ProductGroup.WATER_CONTROL,
         model=16,
         variant=1,
     )
     assert ProductType.from_manufacturer_data(data) is ProductType.AQUA_CONTOURS
-
-    raw = bytes.fromhex("0504f162c103")
-    data = ManufacturerData.decode(raw)
-    assert data == ManufacturerData(
-        pairable=None, serial=63005425, group=None, model=None, variant=None
-    )
 
 
 def test_string_firmware_invalid():

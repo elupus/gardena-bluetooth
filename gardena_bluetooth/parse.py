@@ -233,11 +233,11 @@ class ProductGroup(EnumOrInt):
 @dataclass
 class ManufacturerData:
     company: ClassVar[int] = 0x0426
-    pairable: bool | None
-    serial: int | None
-    group: int | ProductGroup | None
-    model: int | None
-    variant: int | None
+    pairable: bool | None = None
+    serial: int | None = None
+    group: int | ProductGroup | None = None
+    model: int | None = None
+    variant: int | None = None
 
     @staticmethod
     def decode_dict(data: bytes):
@@ -252,14 +252,22 @@ class ManufacturerData:
 
     @staticmethod
     def decode(data: bytes):
+        res = ManufacturerData()
+        res.update(data)
+        return res
+
+    def update(self, data: bytes):
         value = ManufacturerData.decode_dict(data)
         info = dict(enumerate(value.get(6, b"")))
-        serial = value.get(4)
-        pairable = value.get(5)
-        return ManufacturerData(
-            pairable=bool.from_bytes(pairable, "little") if pairable else None,
-            serial=int.from_bytes(serial, "little") if serial else None,
-            group=ProductGroup.enum_or_int(info.get(0)),
-            model=info.get(1),
-            variant=info.get(2),
-        )
+
+        if (data := info.get(0)) is not None:
+            self.group = ProductGroup.enum_or_int(data)
+        if (data := info.get(1)) is not None:
+            self.model = data
+        if (data := info.get(2)) is not None:
+            self.variant = data
+
+        if (data := value.get(4)) is not None:
+            self.serial = int.from_bytes(data, "little")
+        if (data := value.get(5)) is not None:
+            self.pairable = bool.from_bytes(data, "little")
