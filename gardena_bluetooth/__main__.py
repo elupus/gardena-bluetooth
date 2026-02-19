@@ -3,7 +3,7 @@ import asyncclick as click
 from bleak import (
     AdvertisementData,
     BleakClient,
-    BleakGATTCharacteristic,
+    BleakError,
     BleakScanner,
     BLEDevice,
 )
@@ -76,13 +76,16 @@ async def connect(address: str):
 
             service_parser = Service.find_service(service.uuid, product_type)
 
-            async def read_print(char: BleakGATTCharacteristic):
-                if "read" in char.properties:
-                    data = await client.read_gatt_char(char.uuid)
-                else:
-                    data = None
+            for char in service.characteristics:
                 click.echo(f" -  {char}")
                 click.echo(f"    Prop: {char.properties}")
+
+                data = None
+                if "read" in char.properties:
+                    try:
+                        data = await client.read_gatt_char(char.uuid)
+                    except BleakError as exc:
+                        click.echo(f"    Failed: {repr(exc)}")
 
                 if data is not None:
                     if service_parser and (
@@ -91,10 +94,6 @@ async def connect(address: str):
                         click.echo(f"    Data: {parser.decode(data)}")
                     else:
                         click.echo(f"    Data: {data}")
-
-            async with asyncio.TaskGroup() as tg:
-                for char in service.characteristics:
-                    tg.create_task(read_print(char))
 
 
 @main.command()
