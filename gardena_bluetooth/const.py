@@ -1,5 +1,7 @@
+from abc import ABC
 from .parse import (
     CharacteristicBool,
+    CharacteristicWeekday,
     CharacteristicBytes,
     CharacteristicInt,
     CharacteristicLong,
@@ -98,6 +100,43 @@ class AquaContourSchedule(Service):
     schedule_13 = CharacteristicBytes("98bd0c1d-0b0e-421a-84e5-ddbf75dc6de4")
     schedule_14 = CharacteristicBytes("98bd0c1e-0b0e-421a-84e5-ddbf75dc6de4")
     schedule_15 = CharacteristicBytes("98bd0c1f-0b0e-421a-84e5-ddbf75dc6de4")
+
+
+class Schedule(Service, ABC):
+    products = set(ProductType) - {ProductType.AQUA_CONTOURS}
+
+    def __init_subclass__(cls, *, instance: int, **kwargs):
+        def _uuid(offset: int) -> str:
+            return f"98bd0c{0x10 * instance + offset:02x}-0b0e-421a-84e5-ddbf75dc6de4"
+
+        cls.uuid = _uuid(0)
+        cls.start_time = CharacteristicLong(_uuid(1), "Start Time")
+        cls.duration = CharacteristicLong(_uuid(2), "Duration")
+        cls.weekdays = CharacteristicWeekday(_uuid(3), "Weekdays")
+        cls.valve_link = CharacteristicBytes(_uuid(4), "Valve Link")
+        cls.active = CharacteristicBool(_uuid(5), "Active")
+        cls.sensor_link = CharacteristicBool(_uuid(6), "Sensor Link")
+        super().__init_subclass__(**kwargs)
+
+
+class Schedule_1(Schedule, instance=1):
+    pass
+
+
+class Schedule_2(Schedule, instance=2):
+    pass
+
+
+class Schedule_3(Schedule, instance=3):
+    pass
+
+
+class Schedule_4(Schedule, instance=4):
+    pass
+
+
+class Schedule_5(Schedule, instance=5):
+    pass
 
 
 class DeviceInformation(Service):
