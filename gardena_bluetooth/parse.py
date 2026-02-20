@@ -222,6 +222,16 @@ class Service:
                 return service
         return None
 
+    @classmethod
+    def services_for_product_type(cls, product_type: ProductType) -> list[Self]:
+        """Get all services for a product type."""
+        return [
+            service
+            for services in Service.registry.values()
+            for service in services
+            if product_type in service.products
+        ]
+
     def __init_subclass__(cls, /, **kwargs):
         super().__init_subclass__(**kwargs)
         if ABC in cls.__bases__:
