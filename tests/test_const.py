@@ -6,6 +6,7 @@ from gardena_bluetooth.const import (
     Schedule_4,
     Schedule_5,
 )
+from gardena_bluetooth.parse import Service, Characteristic
 import pytest
 
 
@@ -27,3 +28,14 @@ def test_schedule(schedule: type[Schedule], base: str):
     assert schedule.valve_link.uuid == f"98bd0c{base}4-0b0e-421a-84e5-ddbf75dc6de4"
     assert schedule.active.uuid == f"98bd0c{base}5-0b0e-421a-84e5-ddbf75dc6de4"
     assert schedule.sensor_link.uuid == f"98bd0c{base}6-0b0e-421a-84e5-ddbf75dc6de4"
+
+
+def test_id_uniqueness():
+    """Ensure our id's are globally unique for services and characteristics."""
+    ids: dict[str, Service | Characteristic] = {}
+    for services in Service.registry.values():
+        for service in services:
+            assert ids.setdefault(service.unique_id, service) is service
+
+            for char in service.characteristics.values():
+                assert ids.setdefault(char.unique_id, char) is char

@@ -1,5 +1,5 @@
 from abc import ABC
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import IntEnum, Enum, auto
 from typing import ClassVar, Generic, Self, TypeVar
@@ -52,13 +52,20 @@ CharacteristicType = TypeVar("CharacteristicType")
 @dataclass
 class Characteristic(Generic[CharacteristicType]):
     uuid: str
+    variant: str | None = None
     name: str = ""
     registry: ClassVar[dict[str, list[Self]]] = {}
+    unique_id: str = field(init=False)
 
     def __set_name__(self, _, name: str):
         self.name = pretty_name(name)
 
     def __post_init__(self):
+        if self.variant is not None:
+            unique_id = self.uuid + ":" + self.variant
+        else:
+            unique_id = self.uuid
+        object.__setattr__(self, "unique_id", unique_id)
         self.registry.setdefault(self.uuid, []).append(self)
 
     @classmethod
@@ -209,7 +216,9 @@ class CharacteristicTimeArray(Characteristic[list[datetime]]):
 
 
 class Service:
+    unique_id: ClassVar[str]
     uuid: ClassVar[str]
+    variant: ClassVar[str | None] = None
     products: ClassVar[set[ProductType]] = set(ProductType)
     registry: ClassVar[dict[str, list[Self]]] = {}
     characteristics: ClassVar[dict[str, Characteristic]] = {}
@@ -236,6 +245,10 @@ class Service:
         super().__init_subclass__(**kwargs)
         if ABC in cls.__bases__:
             return
+        if cls.variant is not None:
+            cls.unique_id = cls.uuid + ":" + cls.variant
+        else:
+            cls.unique_id = cls.uuid
         cls.registry.setdefault(cls.uuid, []).append(cls)
 
         cls.characteristics = {}
