@@ -40,14 +40,19 @@ def test_manufacturer_data():
     assert ProductType.from_manufacturer_data(data) is ProductType.PRESSURE_TANKS
 
 
-def test_parse_manufacturer_data_aquaprecise():
-    # For some reason the device seem to send different manufacture data
-    # while app is connection, this data is from same device in different
-    # states. Could be bootloader state maybe?
+def test_parse_manufacturer_data_segmented():
+    """Test segmented manufacturer data."""
 
     data = ManufacturerData()
     raw = bytes.fromhex("0205000406121001")
     data.update(raw)
+
+    assert data == ManufacturerData(
+        pairable=False,
+        group=ProductGroup.WATER_CONTROL,
+        model=16,
+        variant=1,
+    )
 
     raw = bytes.fromhex("0504f162c103")
     data.update(raw)
