@@ -10,13 +10,12 @@ from bleak.exc import BleakError
 from bleak.backends.device import BLEDevice
 from bleak_retry_connector import establish_connection
 
-from .const import DeviceConfiguration
 from .exceptions import (
     CharacteristicNoAccess,
     CharacteristicNotFound,
     CommunicationFailure,
 )
-from .parse import Characteristic, CharacteristicType
+from .parse import Characteristic, CharacteristicTime, CharacteristicType
 
 LOGGER = logging.getLogger(__name__)
 DEFAULT_MISSING = object()
@@ -199,9 +198,9 @@ class Client:
         data = char.encode(value)
         await self.write_char_raw(char.uuid, data, response)
 
-    async def update_timestamp(self, now: datetime):
+    async def update_timestamp(self, char: CharacteristicTime, now: datetime):
         try:
-            timestamp = await self.read_char(DeviceConfiguration.unix_timestamp)
+            timestamp = await self.read_char(char)
         except CharacteristicNoAccess:
             LOGGER.debug("No timestamp defined for device")
             return
@@ -212,7 +211,7 @@ class Client:
                 "Updating time on device to match local time delta was %s", delta
             )
             await self.write_char(
-                DeviceConfiguration.unix_timestamp,
+                char,
                 now.replace(tzinfo=None),
                 True,
             )
