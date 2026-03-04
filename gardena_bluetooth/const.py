@@ -103,21 +103,51 @@ class AquaContourSchedule(Service):
     products = {ProductType.AQUA_CONTOURS}
     variant = "1"
 
-    schedule_1 = CharacteristicBytes("98bd0c11-0b0e-421a-84e5-ddbf75dc6de4")
-    schedule_2 = CharacteristicBytes("98bd0c12-0b0e-421a-84e5-ddbf75dc6de4")
-    schedule_3 = CharacteristicBytes("98bd0c13-0b0e-421a-84e5-ddbf75dc6de4")
-    schedule_4 = CharacteristicBytes("98bd0c14-0b0e-421a-84e5-ddbf75dc6de4")
-    schedule_5 = CharacteristicBytes("98bd0c15-0b0e-421a-84e5-ddbf75dc6de4")
-    schedule_6 = CharacteristicBytes("98bd0c16-0b0e-421a-84e5-ddbf75dc6de4")
-    schedule_7 = CharacteristicBytes("98bd0c17-0b0e-421a-84e5-ddbf75dc6de4")
-    schedule_8 = CharacteristicBytes("98bd0c18-0b0e-421a-84e5-ddbf75dc6de4")
-    schedule_9 = CharacteristicBytes("98bd0c19-0b0e-421a-84e5-ddbf75dc6de4")
-    schedule_10 = CharacteristicBytes("98bd0c1a-0b0e-421a-84e5-ddbf75dc6de4")
-    schedule_11 = CharacteristicBytes("98bd0c1b-0b0e-421a-84e5-ddbf75dc6de4")
-    schedule_12 = CharacteristicBytes("98bd0c1c-0b0e-421a-84e5-ddbf75dc6de4")
-    schedule_13 = CharacteristicBytes("98bd0c1d-0b0e-421a-84e5-ddbf75dc6de4")
-    schedule_14 = CharacteristicBytes("98bd0c1e-0b0e-421a-84e5-ddbf75dc6de4")
-    schedule_15 = CharacteristicBytes("98bd0c1f-0b0e-421a-84e5-ddbf75dc6de4")
+    schedule_1 = CharacteristicBytes(
+        "98bd0c11-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
+    schedule_2 = CharacteristicBytes(
+        "98bd0c12-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
+    schedule_3 = CharacteristicBytes(
+        "98bd0c13-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
+    schedule_4 = CharacteristicBytes(
+        "98bd0c14-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
+    schedule_5 = CharacteristicBytes(
+        "98bd0c15-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
+    schedule_6 = CharacteristicBytes(
+        "98bd0c16-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
+    schedule_7 = CharacteristicBytes(
+        "98bd0c17-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
+    schedule_8 = CharacteristicBytes(
+        "98bd0c18-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
+    schedule_9 = CharacteristicBytes(
+        "98bd0c19-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
+    schedule_10 = CharacteristicBytes(
+        "98bd0c1a-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
+    schedule_11 = CharacteristicBytes(
+        "98bd0c1b-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
+    schedule_12 = CharacteristicBytes(
+        "98bd0c1c-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
+    schedule_13 = CharacteristicBytes(
+        "98bd0c1d-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
+    schedule_14 = CharacteristicBytes(
+        "98bd0c1e-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
+    schedule_15 = CharacteristicBytes(
+        "98bd0c1f-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
 
 
 class Schedule(Service, ABC):
