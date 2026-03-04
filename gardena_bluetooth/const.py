@@ -212,8 +212,8 @@ class Pump(Service):
     flow_rate = CharacteristicUInt16("98bd0103-0b0e-421a-84e5-ddbf75dc6de4")
     ptu_mode = CharacteristicInt("98bd0104-0b0e-421a-84e5-ddbf75dc6de4")
     leakage_detection = CharacteristicBool("98bd0105-0b0e-421a-84e5-ddbf75dc6de4")
-    min_preassure = CharacteristicInt("98bd0106-0b0e-421a-84e5-ddbf75dc6de4")
-    max_preassure = CharacteristicInt("98bd0107-0b0e-421a-84e5-ddbf75dc6de4")
+    min_preassure = CharacteristicUInt16("98bd0106-0b0e-421a-84e5-ddbf75dc6de4")
+    max_preassure = CharacteristicUInt16("98bd0107-0b0e-421a-84e5-ddbf75dc6de4")
     child_lock = CharacteristicBool("98bd0108-0b0e-421a-84e5-ddbf75dc6de4")
     filter_reminder = CharacteristicInt("98bd0109-0b0e-421a-84e5-ddbf75dc6de4")
     direct_start = CharacteristicBool("98bd010a-0b0e-421a-84e5-ddbf75dc6de4")
@@ -230,12 +230,12 @@ class Spray(Service):
     uuid = "98bd0110-0b0e-421a-84e5-ddbf75dc6de4"
     variant = "1"
 
-    distance = CharacteristicInt("98bd0111-0b0e-421a-84e5-ddbf75dc6de4", variant="1")
-    sector = CharacteristicInt("98bd0112-0b0e-421a-84e5-ddbf75dc6de4", variant="1")
-    current_distance = CharacteristicInt(
+    distance = CharacteristicUInt16("98bd0111-0b0e-421a-84e5-ddbf75dc6de4", variant="1")
+    sector = CharacteristicUInt16("98bd0112-0b0e-421a-84e5-ddbf75dc6de4", variant="1")
+    current_distance = CharacteristicUInt16(
         "98bd0113-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
-    current_sector = CharacteristicInt(
+    current_sector = CharacteristicUInt16(
         "98bd0114-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
     watering_mode_error = CharacteristicInt(
@@ -265,7 +265,7 @@ class FlowStatistics(Service):
     overall = CharacteristicLong("98bd0e16-0b0e-421a-84e5-ddbf75dc6de4")
     resettable = CharacteristicLong("98bd0e17-0b0e-421a-84e5-ddbf75dc6de4")
     last_reset = CharacteristicTime("98bd0e18-0b0e-421a-84e5-ddbf75dc6de4")
-    current = CharacteristicInt("98bd0e19-0b0e-421a-84e5-ddbf75dc6de4")
+    current = CharacteristicUInt16("98bd0e19-0b0e-421a-84e5-ddbf75dc6de4")
 
 
 class AquaContourPosition(Service):
