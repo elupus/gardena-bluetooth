@@ -128,12 +128,12 @@ class Schedule(Service, ABC):
             return f"98bd0c{0x10 * instance + offset:02x}-0b0e-421a-84e5-ddbf75dc6de4"
 
         cls.uuid = _uuid(0)
-        cls.start_time = CharacteristicLong(_uuid(1), "Start Time")
-        cls.duration = CharacteristicLong(_uuid(2), "Duration")
-        cls.weekdays = CharacteristicWeekday(_uuid(3), "Weekdays")
-        cls.valve_link = CharacteristicBytes(_uuid(4), "Valve Link")
-        cls.active = CharacteristicBool(_uuid(5), "Active")
-        cls.sensor_link = CharacteristicBool(_uuid(6), "Sensor Link")
+        cls.start_time = CharacteristicLong(_uuid(1), name="Start Time")
+        cls.duration = CharacteristicLong(_uuid(2), name="Duration")
+        cls.weekdays = CharacteristicWeekday(_uuid(3), name="Weekdays")
+        cls.valve_link = CharacteristicBytes(_uuid(4), name="Valve Link")
+        cls.active = CharacteristicBool(_uuid(5), name="Active")
+        cls.sensor_link = CharacteristicBool(_uuid(6), name="Sensor Link")
         super().__init_subclass__(**kwargs)
 
 
