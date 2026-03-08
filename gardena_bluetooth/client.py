@@ -15,7 +15,13 @@ from .exceptions import (
     CharacteristicNotFound,
     CommunicationFailure,
 )
-from .parse import Characteristic, CharacteristicTime, CharacteristicType
+from .parse import (
+    Characteristic,
+    CharacteristicTime,
+    CharacteristicType,
+    ProductType,
+    Service,
+)
 
 LOGGER = logging.getLogger(__name__)
 DEFAULT_MISSING = object()
@@ -121,11 +127,23 @@ class CachedConnection:
 
 
 class Client:
-    def __init__(self, client_or_device: CachedConnection | BLEDevice) -> None:
+    def __init__(
+        self,
+        client_or_device: CachedConnection | BLEDevice,
+        product_type: ProductType = ProductType.UNKNOWN,
+    ) -> None:
         if isinstance(client_or_device, CachedConnection):
             self._client = client_or_device
         else:
             self._client = CachedConnection(DEFAULT_DELAY, lambda: client_or_device)
+
+        self._services = Service.services_for_product_type(product_type)
+        self._product_type = product_type
+        self._unique_id = {
+            char.unique_id
+            for service in self._services
+            for char in service.characteristics.values()
+        }
 
     async def disconnect(self):
         await self._client.disconnect()
@@ -171,6 +189,12 @@ class Client:
         default: DEFAULT_TYPE = DEFAULT_MISSING,
     ) -> CharacteristicType | DEFAULT_TYPE:
         """Read data to from a characteristic."""
+        if char.unique_id not in self._unique_id:
+            LOGGER.debug("Attempt to read unsupported %s", char.unique_id)
+            if default is not DEFAULT_MISSING:
+                return default
+            raise CharacteristicNotFound
+
         try:
             return char.decode(await self.read_char_raw(char.uuid))
         except CharacteristicNotFound:
@@ -195,6 +219,9 @@ class Client:
         response=True,
     ) -> None:
         """Write data to a characteristic."""
+        if char.unique_id not in self._unique_id:
+            raise CharacteristicNotFound
+
         data = char.encode(value)
         await self.write_char_raw(char.uuid, data, response)
 
@@ -217,6 +244,17 @@ class Client:
             )
         else:
             LOGGER.debug("No need to update timestamp local time delta was %s", delta)
+
+    async def get_all_characteristics(self) -> dict[str, Characteristic]:
+        """Get all characteristics from device."""
+        uuids = await self.get_all_characteristics_uuid()
+        characteristics = {
+            char.unique_id: char
+            for service in self._services
+            for char in service.characteristics.values()
+            if char.uuid in uuids
+        }
+        return characteristics
 
     async def get_all_characteristics_uuid(self) -> set[str]:
         """Get all characteristics from device."""
