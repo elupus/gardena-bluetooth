@@ -1,4 +1,5 @@
 from abc import ABC
+from enum import IntEnum
 from .parse import (
     CharacteristicBool,
     CharacteristicWeekday,
@@ -290,6 +291,18 @@ class AquaContour(Service):
     )
     frost_warning = CharacteristicBool("98bd0a15-0b0e-421a-84e5-ddbf75dc6de4")
     active_contour = CharacteristicBytes("98bd0a16-0b0e-421a-84e5-ddbf75dc6de4")
+    operation_mode = CharacteristicInt("98bd0a17-0b0e-421a-84e5-ddbf75dc6de4")
+
+
+class AquaContourWateringMode(IntEnum):
+    PREVIEW = -3
+    SETUP_MODE = -1
+    REST = 0
+    CONTOUR_1 = 1
+    CONTOUR_2 = 2
+    CONTOUR_3 = 3
+    CONTOUR_4 = 4
+    CONTOUR_5 = 5
 
 
 class AquaContourWatering(Service):
