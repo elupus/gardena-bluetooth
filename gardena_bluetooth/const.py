@@ -281,6 +281,7 @@ class EventHistory(Service):
 
 class AquaContour(Service):
     uuid = "98bd0a10-0b0e-421a-84e5-ddbf75dc6de4"
+    products = {ProductType.AQUA_CONTOURS}
 
     unix_timestamp = CharacteristicTime("98bd0a11-0b0e-421a-84e5-ddbf75dc6de4")
     custom_device_name = CharacteristicNullStringUf8(
@@ -300,6 +301,8 @@ class FlowStatistics(Service):
 
 class AquaContourPosition(Service):
     uuid = "98bd0130-0b0e-421a-84e5-ddbf75dc6de4"
+    products = {ProductType.AQUA_CONTOURS}
+
     active_position = CharacteristicInt("98bd0132-0b0e-421a-84e5-ddbf75dc6de4")
     position_mask = CharacteristicBytes("98bd0135-0b0e-421a-84e5-ddbf75dc6de4")
     position_name_1 = CharacteristicNullStringUf8(
@@ -321,6 +324,8 @@ class AquaContourPosition(Service):
 
 class AquaContourBattery(Service):
     uuid = "0000180f-0000-1000-8000-00805f9b34fb"
+    products = {ProductType.AQUA_CONTOURS}
+
     battery_level = CharacteristicInt("00002a19-0000-1000-8000-00805f9b34fb")
     battery_level_status = CharacteristicInt("00002bed-0000-1000-8000-00805f9b34fb")
 
