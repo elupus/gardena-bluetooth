@@ -214,6 +214,7 @@ class Sensor(Service):
 
 class WateringHistory(Service):
     uuid = "98bd0d10-0b0e-421a-84e5-ddbf75dc6de4"
+    products = set(ProductType) - {ProductType.AQUA_CONTOURS}
 
     timestamp_array = CharacteristicTimeArray("98bd0d11-0b0e-421a-84e5-ddbf75dc6de4")
     timestamp_count = CharacteristicInt("98bd0d12-0b0e-421a-84e5-ddbf75dc6de4")
@@ -289,6 +290,45 @@ class AquaContour(Service):
     )
     frost_warning = CharacteristicBool("98bd0a15-0b0e-421a-84e5-ddbf75dc6de4")
     active_contour = CharacteristicBytes("98bd0a16-0b0e-421a-84e5-ddbf75dc6de4")
+
+
+class AquaContourWatering(Service):
+    uuid = "98bd0d10-0b0e-421a-84e5-ddbf75dc6de4"
+    variant = "1"
+    products = {ProductType.AQUA_CONTOURS}
+    watering_active = CharacteristicInt(
+        "98bd0d11-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
+    remaining_watering_time = CharacteristicLong(
+        "98bd0d12-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
+    manual_watering_time = CharacteristicLong(
+        "98bd0d13-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
+    activation_reason = CharacteristicInt(
+        "98bd0d14-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
+    watering_skipped = CharacteristicBool(
+        "98bd0d15-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
+    skipped_schedule_number = CharacteristicInt(
+        "98bd0d15-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
+    watering_control_error = CharacteristicInt(
+        "98bd0d16-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
+    skipped_reason = CharacteristicInt(
+        "98bd0d17-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
+    watering_pause = CharacteristicInt(
+        "98bd0d18-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
+    seasonal_adjust = CharacteristicInt(
+        "98bd0d19-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
+    rain_sensitivity = CharacteristicInt(
+        "98bd0d1a-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
 
 
 class FlowStatistics(Service):
