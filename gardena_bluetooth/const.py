@@ -281,6 +281,13 @@ class EventHistory(Service):
     error = CharacteristicBytes("98bd0122-0b0e-421a-84e5-ddbf75dc6de4")
 
 
+class AquaContourOperationMode(IntEnum):
+    ACTIVE = 1
+    MANUAL_MODE = 3
+    PRE_WINTER = 4
+    DEEP_SLEEP = 6
+
+
 class AquaContour(Service):
     uuid = "98bd0a10-0b0e-421a-84e5-ddbf75dc6de4"
     products = {ProductType.AQUA_CONTOURS}
