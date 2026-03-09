@@ -299,6 +299,7 @@ class AquaContour(Service):
     frost_warning = CharacteristicBool("98bd0a15-0b0e-421a-84e5-ddbf75dc6de4")
     active_contour = CharacteristicBytes("98bd0a16-0b0e-421a-84e5-ddbf75dc6de4")
     operation_mode = CharacteristicInt("98bd0a17-0b0e-421a-84e5-ddbf75dc6de4")
+    factory_reset = CharacteristicInt("98bd0a18-0b0e-421a-84e5-ddbf75dc6de4")
 
 
 class AquaContourWateringMode(IntEnum):
