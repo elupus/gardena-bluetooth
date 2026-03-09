@@ -370,7 +370,7 @@ class AquaContourPosition(Service):
     products = {ProductType.AQUA_CONTOURS}
 
     active_position = CharacteristicInt("98bd0132-0b0e-421a-84e5-ddbf75dc6de4")
-    position_mask = CharacteristicBytes("98bd0135-0b0e-421a-84e5-ddbf75dc6de4")
+    position_contour_mask = CharacteristicBytes("98bd0135-0b0e-421a-84e5-ddbf75dc6de4")
     position_name_1 = CharacteristicNullStringUf8(
         "98bd013a-0b0e-421a-84e5-ddbf75dc6de4"
     )
