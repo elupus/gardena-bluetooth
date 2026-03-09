@@ -202,21 +202,36 @@ class Client:
                 return default
             raise
 
-    async def write_char_raw(self, uuid: str, data: bytes, response: bool = True):
+    async def write_char_raw(
+        self, uuid: str, data: bytes, response: bool | None = None
+    ):
         async with self._client() as client:
             """Write data to a characteristic."""
             characteristic = client.services.get_characteristic(uuid)
             if characteristic is None:
                 raise CharacteristicNotFound(f"Unable to find characteristic {uuid}")
-            if "write" not in characteristic.properties:
-                raise CharacteristicNoAccess(f"Characteristic {uuid} is not writable")
+
+            if response is None:
+                response = "write" in characteristic.properties
+
+            if response:
+                if "write" not in characteristic.properties:
+                    raise CharacteristicNoAccess(
+                        f"Characteristic {uuid} is not writable"
+                    )
+            else:
+                if "write-without-response" not in characteristic.properties:
+                    raise CharacteristicNoAccess(
+                        f"Characteristic {uuid} is not writable without response"
+                    )
+
             await client.write_gatt_char(characteristic, data, response=response)
 
     async def write_char(
         self,
         char: Characteristic[CharacteristicType],
         value: CharacteristicType,
-        response=True,
+        response: bool | None = None,
     ) -> None:
         """Write data to a characteristic."""
         if char.unique_id not in self._unique_id:
