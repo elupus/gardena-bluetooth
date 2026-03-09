@@ -215,6 +215,21 @@ class CharacteristicTimeArray(Characteristic[list[datetime]]):
         ]
 
 
+@dataclass
+class CharacteristicIntEnum[T: IntEnum](CharacteristicInt):
+    enum: type[T] = field(kw_only=True)
+
+    def decode(self, data: bytes) -> T | int:
+        raw = int.from_bytes(data, "little", signed=True)
+        try:
+            return self.enum(raw)
+        except ValueError:
+            return raw
+
+    def encode(self, value: T | int) -> bytes:
+        return value.to_bytes(1, "little", signed=True)
+
+
 class Service:
     unique_id: ClassVar[str]
     uuid: ClassVar[str]
