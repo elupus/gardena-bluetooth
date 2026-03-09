@@ -102,7 +102,7 @@ async def connect(address: str):
 
                 if data is not None:
                     if char_parser:
-                        click.echo(f"    Data: {char_parser.decode(data)}")
+                        click.echo(f"    Data: {char_parser.decode(data)!r}")
                     else:
                         click.echo(f"    Data: {data}")
 

@@ -5,7 +5,9 @@ from gardena_bluetooth.parse import (
     CharacteristicString,
     CharacteristicNullStringUf8,
     CharacteristicNullString,
+    CharacteristicIntEnum,
 )
+from enum import IntEnum
 
 
 def test_manufacturer_data():
@@ -83,3 +85,18 @@ def test_string_nulled():
     raw = b"abc\x00junk"
     data = CharacteristicNullString.decode(raw)
     assert data == "abc"
+
+
+def test_enum():
+    class Values(IntEnum):
+        A = 0
+        B = 2
+
+    char = CharacteristicIntEnum("", enum=Values)
+    raw = b"\x00"
+    data = char.decode(raw)
+    assert data is Values.A
+    raw = b"\x01"
+    data = char.decode(raw)
+    assert data == 1
+    assert char.encode(Values.B) == b"\x02"

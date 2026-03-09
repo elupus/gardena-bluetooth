@@ -5,6 +5,7 @@ from .parse import (
     CharacteristicWeekday,
     CharacteristicBytes,
     CharacteristicInt,
+    CharacteristicIntEnum,
     CharacteristicLong,
     CharacteristicLongArray,
     CharacteristicString,
@@ -298,7 +299,9 @@ class AquaContour(Service):
     )
     frost_warning = CharacteristicBool("98bd0a15-0b0e-421a-84e5-ddbf75dc6de4")
     active_contour = CharacteristicBytes("98bd0a16-0b0e-421a-84e5-ddbf75dc6de4")
-    operation_mode = CharacteristicInt("98bd0a17-0b0e-421a-84e5-ddbf75dc6de4")
+    operation_mode = CharacteristicIntEnum(
+        "98bd0a17-0b0e-421a-84e5-ddbf75dc6de4", enum=AquaContourOperationMode
+    )
     factory_reset = CharacteristicInt("98bd0a18-0b0e-421a-84e5-ddbf75dc6de4")
 
 
@@ -317,8 +320,10 @@ class AquaContourWatering(Service):
     uuid = "98bd0d10-0b0e-421a-84e5-ddbf75dc6de4"
     variant = "1"
     products = {ProductType.AQUA_CONTOURS}
-    watering_active = CharacteristicInt(
-        "98bd0d11-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    watering_active = CharacteristicIntEnum(
+        "98bd0d11-0b0e-421a-84e5-ddbf75dc6de4",
+        variant="1",
+        enum=AquaContourWateringMode,
     )
     remaining_watering_time = CharacteristicLong(
         "98bd0d12-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
