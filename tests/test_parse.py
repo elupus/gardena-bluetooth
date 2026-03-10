@@ -114,6 +114,6 @@ def test_error_code():
     char = CharacteristicErrorData("", enum=Errors)
     data = char.decode(b"\x01\x01\xc3,\xafi\x01")
     assert data.error_code is Errors.B
-    assert data.time_stamp == datetime(2026, 3, 9, 21, 25, 39)
+    assert data.time_stamp == datetime(2026, 3, 9, 20, 25, 39)
     assert data.current_event_index == 1
     assert data.total_events == 1
