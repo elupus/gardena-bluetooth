@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from gardena_bluetooth.parse import (
     ManufacturerData,
     ProductGroup,
@@ -6,6 +8,7 @@ from gardena_bluetooth.parse import (
     CharacteristicNullStringUf8,
     CharacteristicNullString,
     CharacteristicIntEnum,
+    CharacteristicErrorData,
 )
 from enum import IntEnum
 
@@ -100,3 +103,17 @@ def test_enum():
     data = char.decode(raw)
     assert data == 1
     assert char.encode(Values.B) == b"\x02"
+
+
+def test_error_code():
+    class Errors(IntEnum):
+        A = 0
+        B = 1
+        C = 2
+
+    char = CharacteristicErrorData("", enum=Errors)
+    data = char.decode(b"\x01\x01\xc3,\xafi\x01")
+    assert data.error_code is Errors.B
+    assert data.time_stamp == datetime(2026, 3, 9, 21, 25, 39)
+    assert data.current_event_index == 1
+    assert data.total_events == 1

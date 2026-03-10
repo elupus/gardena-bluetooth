@@ -4,6 +4,7 @@ from .parse import (
     CharacteristicBool,
     CharacteristicWeekday,
     CharacteristicBytes,
+    CharacteristicErrorData,
     CharacteristicInt,
     CharacteristicIntEnum,
     CharacteristicLong,
@@ -276,10 +277,23 @@ class Spray(Service):
     )
 
 
+class AquaContourErrorCode(IntEnum):
+    NO_ERROR = 0
+    NO_WATER = 1
+    NOT_ENOUGH_WATER = 2
+    CHARGER_ERROR = 3
+    SPRINKLER_MOTOR_ERROR = 4
+    VALVE_MOTOR_ERROR = 5
+    ROTATION_SENSOR_ERROR = 6
+    FLASH_ERROR = 7
+
+
 class EventHistory(Service):
     uuid = "98bd0120-0b0e-421a-84e5-ddbf75dc6de4"
     history = CharacteristicBytes("98bd0121-0b0e-421a-84e5-ddbf75dc6de4")
-    error = CharacteristicBytes("98bd0122-0b0e-421a-84e5-ddbf75dc6de4")
+    error = CharacteristicErrorData(
+        "98bd0122-0b0e-421a-84e5-ddbf75dc6de4", enum=AquaContourErrorCode
+    )
 
 
 class AquaContourOperationMode(IntEnum):
