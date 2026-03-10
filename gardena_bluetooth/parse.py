@@ -230,6 +230,42 @@ class CharacteristicIntEnum[T: IntEnum](CharacteristicInt):
         return value.to_bytes(1, "little", signed=True)
 
 
+@dataclass
+class ErrorData[T: IntEnum]:
+    current_event_index: int
+    total_events: int
+    time_stamp: datetime
+    error_code: T | int
+
+
+@dataclass
+class CharacteristicErrorData[T: IntEnum](Characteristic[ErrorData[T]]):
+    enum: type[T] = field(kw_only=True)
+
+    def decode(self, data: bytes) -> ErrorData[T]:
+        error_code = int.from_bytes(data[6:7], "little")
+        try:
+            error_code = self.enum(error_code)
+        except ValueError:
+            pass
+
+        return ErrorData(
+            int.from_bytes(data[0:1], "little"),
+            int.from_bytes(data[1:2], "little"),
+            datetime.fromtimestamp(int.from_bytes(data[2:6], "little")),
+            error_code,
+        )
+
+    @classmethod
+    def encode(cls, value: ErrorData[T]) -> bytes:
+        return [
+            *value.current_event_index.to_bytes(1, "little", signed=True),
+            *value.total_events.to_bytes(1, "little", signed=True),
+            *int(value.time_stamp.timestamp()).to_bytes(4, "little", signed=True),
+            *value.error_code.to_bytes(1, "little", signed=True),
+        ]
+
+
 class Service:
     unique_id: ClassVar[str]
     uuid: ClassVar[str]
