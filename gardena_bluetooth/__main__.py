@@ -101,10 +101,9 @@ async def connect(address: str):
                         click.echo(f"    Failed: {repr(exc)}")
 
                 if data is not None:
+                    click.echo(f"    Raw: {data}")
                     if char_parser:
                         click.echo(f"    Data: {char_parser.decode(data)!r}")
-                    else:
-                        click.echo(f"    Data: {data}")
 
 
 @main.command()
