@@ -1,6 +1,6 @@
 from abc import ABC
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import IntEnum, Enum, auto
 from typing import ClassVar, Generic, Self, TypeVar
 
@@ -198,11 +198,13 @@ class CharacteristicTime(Characteristic[datetime]):
     @classmethod
     def decode(cls, data: bytes) -> datetime:
         value = int.from_bytes(data, "little")
-        return datetime.fromtimestamp(value)
+        return datetime.fromtimestamp(value, timezone.utc).replace(tzinfo=None)
 
     @classmethod
     def encode(cls, value: datetime) -> bytes:
-        return int(value.timestamp()).to_bytes(4, "little", signed=True)
+        return int(value.replace(tzinfo=timezone.utc).timestamp()).to_bytes(
+            4, "little", signed=True
+        )
 
 
 @dataclass
@@ -210,7 +212,7 @@ class CharacteristicTimeArray(Characteristic[list[datetime]]):
     @classmethod
     def decode(cls, data: bytes) -> list[datetime]:
         return [
-            datetime.fromtimestamp(value)
+            datetime.fromtimestamp(value, timezone.utc).replace(tzinfo=None)
             for value in CharacteristicLongArray.decode(data)
         ]
 
@@ -252,7 +254,9 @@ class CharacteristicErrorData[T: IntEnum](Characteristic[ErrorData[T]]):
         return ErrorData(
             int.from_bytes(data[0:1], "little"),
             int.from_bytes(data[1:2], "little"),
-            datetime.fromtimestamp(int.from_bytes(data[2:6], "little")),
+            datetime.fromtimestamp(
+                int.from_bytes(data[2:6], "little"), timezone.utc
+            ).replace(tzinfo=None),
             error_code,
         )
 
@@ -261,7 +265,9 @@ class CharacteristicErrorData[T: IntEnum](Characteristic[ErrorData[T]]):
         return [
             *value.current_event_index.to_bytes(1, "little", signed=True),
             *value.total_events.to_bytes(1, "little", signed=True),
-            *int(value.time_stamp.timestamp()).to_bytes(4, "little", signed=True),
+            *int(value.time_stamp.replace(tzinfo=timezone.utc).timestamp()).to_bytes(
+                4, "little", signed=True
+            ),
             *value.error_code.to_bytes(1, "little", signed=True),
         ]
 
