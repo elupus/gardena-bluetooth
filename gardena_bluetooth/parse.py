@@ -272,6 +272,40 @@ class CharacteristicErrorData[T: IntEnum](Characteristic[ErrorData[T]]):
         ]
 
 
+@dataclass
+class ContourInfo:
+    cycle_time: int
+    precipitation_rate: int
+
+
+@dataclass
+class CharacteristicContourInfo(Characteristic[list[ContourInfo]]):
+    @classmethod
+    def decode(cls, data: bytes) -> list[ContourInfo | None]:
+        contours = []
+        for i in range(0, len(data), 4):
+            cycle_time = int.from_bytes(data[i : i + 2], "little", signed=True)
+            precipitation_rate = int.from_bytes(
+                data[i + 2 : i + 4], "little", signed=True
+            )
+            if cycle_time != -1 and precipitation_rate != -1:
+                contours.append(ContourInfo(cycle_time, precipitation_rate))
+            else:
+                contours.append(None)
+        return contours
+
+    @classmethod
+    def encode(cls, value: list[ContourInfo | None]) -> bytes:
+        result = bytearray()
+        for info in value:
+            if info is None:
+                result.extend(b"\xff\xff\xff\xff")
+                continue
+            result.extend(info.cycle_time.to_bytes(2, "little", signed=True))
+            result.extend(info.precipitation_rate.to_bytes(2, "little", signed=True))
+        return result
+
+
 class Service:
     unique_id: ClassVar[str]
     uuid: ClassVar[str]

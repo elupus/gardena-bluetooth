@@ -2,6 +2,7 @@ from abc import ABC
 from enum import IntEnum
 from .parse import (
     CharacteristicBool,
+    CharacteristicContourInfo,
     CharacteristicWeekday,
     CharacteristicBytes,
     CharacteristicErrorData,
@@ -81,7 +82,7 @@ class AquaContourContours(Service):
     contour_transmit = CharacteristicBytes(
         "98bd0b12-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
-    contour_info = CharacteristicBytes(
+    contour_info = CharacteristicContourInfo(
         "98bd0b13-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
     contour_name_1 = CharacteristicNullStringUf8(

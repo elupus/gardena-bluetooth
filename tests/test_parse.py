@@ -9,12 +9,14 @@ from gardena_bluetooth.parse import (
     CharacteristicNullString,
     CharacteristicIntEnum,
     CharacteristicErrorData,
+    CharacteristicContourInfo,
+    ContourInfo,
 )
 from enum import IntEnum
 
 
 def test_manufacturer_data():
-    raw = b"\x02\x07d\x02\x05\x01\x02\x08\x00\x02" b"\t\x01\x04\x06\x12\x00\x01"
+    raw = b"\x02\x07d\x02\x05\x01\x02\x08\x00\x02\t\x01\x04\x06\x12\x00\x01"
     data = ManufacturerData.decode(raw)
     assert data == ManufacturerData(
         pairable=True, serial=None, group=ProductGroup.WATER_CONTROL, model=0, variant=1
@@ -117,3 +119,22 @@ def test_error_code():
     assert data.time_stamp == datetime(2026, 3, 9, 20, 25, 39)
     assert data.current_event_index == 1
     assert data.total_events == 1
+
+
+def test_contour_info():
+    raw = (
+        b"\x03\x009\x03\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"
+    )
+    char = CharacteristicContourInfo("")
+    data = char.decode(raw)
+    assert data == [
+        ContourInfo(
+            cycle_time=3,
+            precipitation_rate=825,
+        ),
+        None,
+        None,
+        None,
+        None,
+    ]
+    assert char.encode(data) == raw
