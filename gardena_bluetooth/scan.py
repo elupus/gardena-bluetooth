@@ -21,7 +21,7 @@ async def async_get_manufacturer_data(
     fields: set[str],
     *,
     timeout: float = DEFAULT_MANUFACTURER_DATA_TIMEOUT,
-    backend: BaseBleakScanner | None = None,
+    backend: type[BaseBleakScanner] | None = None,
 ):
     """Wait for enough packets of manufacturer data to get select fields, or timeout."""
     data = {address: ManufacturerData() for address in addresses}
@@ -57,7 +57,7 @@ async def async_get_product_types(
     addresses: set[str],
     *,
     timeout: float = DEFAULT_MANUFACTURER_DATA_TIMEOUT,
-    backend: BaseBleakScanner | None = None,
+    backend: type[BaseBleakScanner] | None = None,
 ) -> dict[str, ProductType]:
     """Wait for enough packets of manufacturer data to get the product type."""
     data = await async_get_manufacturer_data(
