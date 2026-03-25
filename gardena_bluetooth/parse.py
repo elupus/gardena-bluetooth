@@ -337,6 +337,7 @@ class ManufacturerData:
     group: int | ProductGroup | None = None
     model: int | None = None
     variant: int | None = None
+    name: str | None = None
 
     @staticmethod
     def decode_dict(data: bytes):
@@ -370,3 +371,5 @@ class ManufacturerData:
             self.serial = int.from_bytes(data, "little")
         if (data := value.get(5)) is not None:
             self.pairable = bool.from_bytes(data, "little")
+        if (data := value.get(8)) is not None:
+            self.name = data.partition(b"\x00")[0].decode("utf-8", "replace")
