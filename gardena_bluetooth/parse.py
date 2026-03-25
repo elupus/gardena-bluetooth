@@ -356,6 +356,10 @@ class ManufacturerData:
         res.update(data)
         return res
 
+    @property
+    def product_type(self) -> ProductType:
+        return ProductType.from_manufacturer_data(self)
+
     def update(self, data: bytes):
         value = ManufacturerData.decode_dict(data)
         info = dict(enumerate(value.get(6, b"")))

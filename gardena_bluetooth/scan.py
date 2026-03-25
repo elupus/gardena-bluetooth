@@ -4,9 +4,6 @@ from contextlib import suppress
 
 from bleak import BleakScanner, BaseBleakScanner
 
-from .parse import (
-    ProductType,
-)
 from .parse import ManufacturerData
 from .const import ScanService
 
@@ -18,8 +15,8 @@ DEFAULT_MANUFACTURER_DATA_TIMEOUT = 5.0
 
 async def async_get_manufacturer_data(
     addresses: set[str],
-    fields: set[str],
     *,
+    fields: set[str] = DEFAULT_MANUFACTURER_DATA_PRODUCT_TYPE_FIELDS,
     timeout: float = DEFAULT_MANUFACTURER_DATA_TIMEOUT,
     backend: type[BaseBleakScanner] | None = None,
 ):
@@ -51,22 +48,3 @@ async def async_get_manufacturer_data(
 
     LOGGER.debug("Manufacturer data %s, incomplete %s", data, data.keys() - done)
     return data
-
-
-async def async_get_product_types(
-    addresses: set[str],
-    *,
-    timeout: float = DEFAULT_MANUFACTURER_DATA_TIMEOUT,
-    backend: type[BaseBleakScanner] | None = None,
-) -> dict[str, ProductType]:
-    """Wait for enough packets of manufacturer data to get the product type."""
-    data = await async_get_manufacturer_data(
-        addresses,
-        DEFAULT_MANUFACTURER_DATA_PRODUCT_TYPE_FIELDS,
-        timeout=timeout,
-        backend=backend,
-    )
-    return {
-        address: ProductType.from_manufacturer_data(mfg_data)
-        for address, mfg_data in data.items()
-    }
