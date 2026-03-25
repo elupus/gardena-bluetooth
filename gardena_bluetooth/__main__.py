@@ -10,7 +10,8 @@ from bleak import (
 from bleak.uuids import uuidstr_to_str
 
 from .const import FotaService, ScanService
-from .parse import Characteristic, ManufacturerData, ProductType, Service
+from .parse import Characteristic, ManufacturerData, Service
+from .scan import async_get_product_types
 
 
 @click.group()
@@ -54,28 +55,13 @@ async def connect(address: str):
     click.echo(f"Connecting to: {address}")
 
     manufacturer_data = ManufacturerData()
-    async with BleakScanner(service_uuids=[ScanService, FotaService]) as scanner:
-        async with asyncio.timeout(10):
-            async for device, data in scanner.advertisement_data():
-                if device.address != address:
-                    continue
-
-                raw = data.manufacturer_data.get(ManufacturerData.company)
-                if raw is None:
-                    continue
-
-                manufacturer_data.update(raw)
-
-                product_type = ProductType.from_manufacturer_data(manufacturer_data)
-                if product_type is ProductType.UNKNOWN:
-                    continue
-
-                break
+    product_types = await async_get_product_types({address})
+    product_type = product_types[address]
 
     click.echo(f"Advertised data: {manufacturer_data}")
     click.echo(f"Product type: {product_type}")
 
-    async with BleakClient(device, timeout=20) as client:
+    async with BleakClient(address, timeout=20) as client:
         for service in client.services:
             service_parser = Service.find_service(service.uuid, product_type)
 
