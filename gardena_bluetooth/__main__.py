@@ -11,7 +11,7 @@ from bleak.uuids import uuidstr_to_str
 
 from .const import FotaService, ScanService
 from .parse import Characteristic, ManufacturerData, Service
-from .scan import async_get_product_types
+from .scan import async_get_manufacturer_data
 
 
 @click.group()
@@ -55,8 +55,8 @@ async def connect(address: str):
     click.echo(f"Connecting to: {address}")
 
     manufacturer_data = ManufacturerData()
-    product_types = await async_get_product_types({address})
-    product_type = product_types[address]
+    product_types = await async_get_manufacturer_data({address})
+    product_type = product_types[address].product_type
 
     click.echo(f"Advertised data: {manufacturer_data}")
     click.echo(f"Product type: {product_type}")
