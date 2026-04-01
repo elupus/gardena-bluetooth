@@ -11,7 +11,7 @@ from .const import ScanService
 LOGGER = logging.getLogger(__name__)
 
 DEFAULT_MANUFACTURER_DATA_PRODUCT_TYPE_FIELDS = {"group", "model", "variant"}
-DEFAULT_MANUFACTURER_DATA_TIMEOUT = 5.0
+DEFAULT_MANUFACTURER_DATA_TIMEOUT = 15.0
 
 
 @contextlib.asynccontextmanager
