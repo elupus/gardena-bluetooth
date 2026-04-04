@@ -54,9 +54,9 @@ async def scan():
 async def connect(address: str):
     click.echo(f"Connecting to: {address}")
 
-    manufacturer_data = ManufacturerData()
     product_types = await async_get_manufacturer_data({address})
-    product_type = product_types[address].product_type
+    manufacturer_data = product_types[address]
+    product_type = manufacturer_data.product_type
 
     click.echo(f"Advertised data: {manufacturer_data}")
     click.echo(f"Product type: {product_type}")
