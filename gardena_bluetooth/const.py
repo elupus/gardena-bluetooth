@@ -1,5 +1,6 @@
 from abc import ABC
 from enum import IntEnum
+from typing import ClassVar
 from .parse import (
     CharacteristicBool,
     CharacteristicWeekday,
@@ -15,6 +16,7 @@ from .parse import (
     CharacteristicNullStringUf8,
     CharacteristicTimeArray,
     CharacteristicUInt16,
+    CharacteristicIntKeys,
     Service,
     ProductType,
 )
@@ -52,6 +54,47 @@ class Valve(Service):
     remaining_open_time = CharacteristicLong("98bd0f13-0b0e-421a-84e5-ddbf75dc6de4")
     manual_watering_time = CharacteristicLong("98bd0f14-0b0e-421a-84e5-ddbf75dc6de4")
     activation_reason = CharacteristicInt("98bd0f15-0b0e-421a-84e5-ddbf75dc6de4")
+
+
+class ValveX(Service, ABC):
+    available: ClassVar[CharacteristicBool]
+    manual_watering_duration: ClassVar[CharacteristicLong]
+    error = ClassVar[CharacteristicInt]
+    state: ClassVar[CharacteristicBool]
+    remaining_time_open: ClassVar[CharacteristicLong]
+    activation_reason: ClassVar[CharacteristicInt]
+    start_watering = ClassVar[CharacteristicString]
+    stop_watering = ClassVar[CharacteristicString]
+
+
+class Valve1(ValveX):
+    uuid = "98bda000-0b0e-421a-84e5-ddbf75dc6de4"
+
+    manual_watering_duration = CharacteristicLong(
+        "98bda001-0b0e-421a-84e5-ddbf75dc6de4"
+    )
+    available = CharacteristicBool("98bda002-0b0e-421a-84e5-ddbf75dc6de4", variant="1")
+    error = CharacteristicInt("98bda003-0b0e-421a-84e5-ddbf75dc6de4")
+    state = CharacteristicBool("98bda008-0b0e-421a-84e5-ddbf75dc6de4")
+    remaining_time_open = CharacteristicLong("98bda010-0b0e-421a-84e5-ddbf75dc6de4")
+    activation_reason = CharacteristicInt("98bda011-0b0e-421a-84e5-ddbf75dc6de4")
+    start_watering = CharacteristicIntKeys("98bda020-0b0e-421a-84e5-ddbf75dc6de4")
+    stop_watering = CharacteristicIntKeys("98bda021-0b0e-421a-84e5-ddbf75dc6de4")
+
+
+class Valve2(ValveX):
+    uuid = "98bda100-0b0e-421a-84e5-ddbf75dc6de4"
+
+    manual_watering_duration = CharacteristicLong(
+        "98bda101-0b0e-421a-84e5-ddbf75dc6de4"
+    )
+    available = CharacteristicBool("98bda002-0b0e-421a-84e5-ddbf75dc6de4", variant="2")
+    error = CharacteristicInt("98bda103-0b0e-421a-84e5-ddbf75dc6de4")
+    state = CharacteristicBool("98bda108-0b0e-421a-84e5-ddbf75dc6de4")
+    remaining_time_open = CharacteristicLong("98bda110-0b0e-421a-84e5-ddbf75dc6de4")
+    activation_reason = CharacteristicInt("98bda111-0b0e-421a-84e5-ddbf75dc6de4")
+    start_watering = CharacteristicIntKeys("98bda120-0b0e-421a-84e5-ddbf75dc6de4")
+    stop_watering = CharacteristicIntKeys("98bda121-0b0e-421a-84e5-ddbf75dc6de4")
 
 
 class DeviceConfiguration(Service):

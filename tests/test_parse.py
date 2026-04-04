@@ -8,6 +8,7 @@ from gardena_bluetooth.parse import (
     CharacteristicNullStringUf8,
     CharacteristicNullString,
     CharacteristicIntEnum,
+    CharacteristicIntKeys,
     CharacteristicErrorData,
 )
 from enum import IntEnum
@@ -138,3 +139,11 @@ def test_error_code():
     assert data.time_stamp == datetime(2026, 3, 9, 20, 25, 39)
     assert data.current_event_index == 1
     assert data.total_events == 1
+
+
+def test_int_keys():
+    char = CharacteristicIntKeys("")
+    raw = char.encode({0: "10", 1: "20"})
+    assert raw == b"0='10',1='20'"
+    data = char.decode(raw)
+    assert data == {0: "10", 1: "20"}

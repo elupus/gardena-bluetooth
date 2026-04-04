@@ -123,6 +123,26 @@ class CharacteristicString(Characteristic[str]):
 
 
 @dataclass
+class CharacteristicIntKeys(Characteristic[dict[int, str]]):
+    @classmethod
+    def decode(cls, data: bytes) -> dict[int, str]:
+        res = {}
+        for value in data.decode("ASCII", "replace").split(","):
+            if "=" not in value:
+                continue
+            key, value = value.split("=", 1)
+            if value.startswith("'") and value.endswith("'"):
+                value = value[1:-1]
+            res[int(key)] = value
+        return res
+
+    @classmethod
+    def encode(cls, value: dict[int, str]) -> bytes:
+        data = ",".join(f"{key}={value!r}" for key, value in value.items())
+        return data.encode("ASCII")
+
+
+@dataclass
 class CharacteristicNullString(Characteristic[str]):
     @classmethod
     def decode(cls, data: bytes) -> str:
