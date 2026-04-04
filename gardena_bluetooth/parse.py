@@ -26,11 +26,21 @@ class ProductType(Enum):
             return ProductType.MOWER
 
         if data.group == 18:
-            if data.model in (0, 1) and data.variant == 1:
+            if data.model in (
+                ProductModelWaterControl.CLASSIC1,
+                ProductModelWaterControl.CLASSIC2,
+                ProductModelWaterControl.SINGLE_WATER_CONTROL,
+                ProductModelWaterControl.DUAL_WATER_CONTROL,
+                ProductModelWaterControl.CLASSIC_PIPELINE,
+                ProductModelWaterControl.SMART_PIPELINE,
+            ) and (data.variant in (0, 1)):
                 return ProductType.WATER_COMPUTER
-            if data.model == 2 and data.variant == 1:
+            if (
+                data.model == ProductModelWaterControl.IRRIGATION_VALVE
+                and data.variant == 1
+            ):
                 return ProductType.VALVE
-            if data.model == 16:
+            if data.model == ProductModelWaterControl.AQUA_CONTOURS:
                 return ProductType.AQUA_CONTOURS
             return ProductType.UNKNOWN
 
@@ -329,13 +339,24 @@ class ProductGroup(EnumOrInt):
     WATER_CONTROL = 18
 
 
+class ProductModelWaterControl(EnumOrInt):
+    CLASSIC1 = 1
+    CLASSIC2 = 0
+    IRRIGATION_VALVE = 2
+    SINGLE_WATER_CONTROL = 3
+    DUAL_WATER_CONTROL = 4
+    CLASSIC_PIPELINE = 5
+    SMART_PIPELINE = 6
+    AQUA_CONTOURS = 16
+
+
 @dataclass
 class ManufacturerData:
     company: ClassVar[int] = 0x0426
     pairable: bool | None = None
     serial: int | None = None
     group: int | ProductGroup | None = None
-    model: int | None = None
+    model: int | ProductModelWaterControl = None
     variant: int | None = None
     name: str | None = None
 
@@ -367,7 +388,10 @@ class ManufacturerData:
         if (data := info.get(0)) is not None:
             self.group = ProductGroup.enum_or_int(data)
         if (data := info.get(1)) is not None:
-            self.model = data
+            if self.group == ProductGroup.WATER_CONTROL:
+                self.model = ProductModelWaterControl.enum_or_int(data)
+            else:
+                self.model = data
         if (data := info.get(2)) is not None:
             self.variant = data
 

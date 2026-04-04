@@ -11,43 +11,59 @@ from gardena_bluetooth.parse import (
     CharacteristicErrorData,
 )
 from enum import IntEnum
+import pytest
 
 
-def test_manufacturer_data():
-    raw = b"\x02\x07d\x02\x05\x01\x02\x08\x00\x02" b"\t\x01\x04\x06\x12\x00\x01"
+@pytest.mark.parametrize(
+    ("raw", "manufacturer_data", "product_type"),
+    [
+        (
+            b"\x02\x07d\x02\x05\x01\x02\x08\x00\x02\t\x01\x04\x06\x12\x00\x01",
+            ManufacturerData(
+                pairable=True,
+                serial=None,
+                group=ProductGroup.WATER_CONTROL,
+                model=0,
+                variant=1,
+                name="",
+            ),
+            ProductType.WATER_COMPUTER,
+        ),
+        (
+            (
+                b"\x02\x07d\x02\x05\x01\x02\x08\x00\x02"
+                b"\t\x01\x04\x06\x20\x00\x01\x05\x04\x01\x02\x03\x04"
+            ),
+            ManufacturerData(
+                pairable=True, serial=0x04030201, group=32, model=0, variant=1, name=""
+            ),
+            ProductType.UNKNOWN,
+        ),
+        (
+            (
+                b"\x05\x04\x14\x18\x00\x00\x02\x05\x01\x04\x06\x11\x02\x02"
+                b"\t\x01\x04\x06\x20\x00\x01\x05\x04\x01\x02\x03\x04"
+            ),
+            ManufacturerData(pairable=True, serial=6164, group=17, model=2, variant=2),
+            ProductType.PRESSURE_TANKS,
+        ),
+        (
+            (b"\x04\x06\x12\x04\x00\x03\x05\x00\x00\x05\x04\xfd3\x00\x00"),
+            ManufacturerData(
+                pairable=False,
+                serial=13309,
+                group=ProductGroup.WATER_CONTROL,
+                model=4,
+                variant=0,
+            ),
+            ProductType.WATER_COMPUTER,
+        ),
+    ],
+)
+def test_manufacturer_data(raw, manufacturer_data, product_type):
     data = ManufacturerData.decode(raw)
-    assert data == ManufacturerData(
-        pairable=True,
-        serial=None,
-        group=ProductGroup.WATER_CONTROL,
-        model=0,
-        variant=1,
-        name="",
-    )
-
-    assert ProductType.from_manufacturer_data(data) == ProductType.WATER_COMPUTER
-
-    raw = (
-        b"\x02\x07d\x02\x05\x01\x02\x08\x00\x02"
-        b"\t\x01\x04\x06\x20\x00\x01\x05\x04\x01\x02\x03\x04"
-    )
-    data = ManufacturerData.decode(raw)
-    assert data == ManufacturerData(
-        pairable=True, serial=0x04030201, group=32, model=0, variant=1, name=""
-    )
-
-    assert ProductType.from_manufacturer_data(data) is ProductType.UNKNOWN
-
-    raw = (
-        b"\x05\x04\x14\x18\x00\x00\x02\x05\x01\x04\x06\x11\x02\x02"
-        b"\t\x01\x04\x06\x20\x00\x01\x05\x04\x01\x02\x03\x04"
-    )
-    data = ManufacturerData.decode(raw)
-    assert data == ManufacturerData(
-        pairable=True, serial=6164, group=17, model=2, variant=2
-    )
-
-    assert ProductType.from_manufacturer_data(data) is ProductType.PRESSURE_TANKS
+    assert data == manufacturer_data
+    assert ProductType.from_manufacturer_data(data) == product_type
 
 
 def test_parse_manufacturer_data_segmented():
