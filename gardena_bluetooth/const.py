@@ -127,19 +127,19 @@ class AquaContourContours(Service):
     contour_info = CharacteristicBytes(
         "98bd0b13-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
-    contour_name_1 = CharacteristicNullStringUf8(
+    contour_name_1 = CharacteristicNullString(
         "98bd0b1a-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
-    contour_name_2 = CharacteristicNullStringUf8(
+    contour_name_2 = CharacteristicNullString(
         "98bd0b1b-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
-    contour_name_3 = CharacteristicNullStringUf8(
+    contour_name_3 = CharacteristicNullString(
         "98bd0b1c-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
-    contour_name_4 = CharacteristicNullStringUf8(
+    contour_name_4 = CharacteristicNullString(
         "98bd0b1d-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
-    contour_name_5 = CharacteristicNullStringUf8(
+    contour_name_5 = CharacteristicNullString(
         "98bd0b1e-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
 
@@ -428,21 +428,11 @@ class AquaContourPosition(Service):
 
     active_position = CharacteristicInt("98bd0132-0b0e-421a-84e5-ddbf75dc6de4")
     position_contour_mask = CharacteristicBytes("98bd0135-0b0e-421a-84e5-ddbf75dc6de4")
-    position_name_1 = CharacteristicNullStringUf8(
-        "98bd013a-0b0e-421a-84e5-ddbf75dc6de4"
-    )
-    position_name_2 = CharacteristicNullStringUf8(
-        "98bd013b-0b0e-421a-84e5-ddbf75dc6de4"
-    )
-    position_name_3 = CharacteristicNullStringUf8(
-        "98bd013c-0b0e-421a-84e5-ddbf75dc6de4"
-    )
-    position_name_4 = CharacteristicNullStringUf8(
-        "98bd013d-0b0e-421a-84e5-ddbf75dc6de4"
-    )
-    position_name_5 = CharacteristicNullStringUf8(
-        "98bd013e-0b0e-421a-84e5-ddbf75dc6de4"
-    )
+    position_name_1 = CharacteristicNullString("98bd013a-0b0e-421a-84e5-ddbf75dc6de4")
+    position_name_2 = CharacteristicNullString("98bd013b-0b0e-421a-84e5-ddbf75dc6de4")
+    position_name_3 = CharacteristicNullString("98bd013c-0b0e-421a-84e5-ddbf75dc6de4")
+    position_name_4 = CharacteristicNullString("98bd013d-0b0e-421a-84e5-ddbf75dc6de4")
+    position_name_5 = CharacteristicNullString("98bd013e-0b0e-421a-84e5-ddbf75dc6de4")
 
 
 class AquaContourBattery(Service):

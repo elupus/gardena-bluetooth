@@ -146,11 +146,11 @@ class CharacteristicIntKeys(Characteristic[dict[int, str]]):
 class CharacteristicNullString(Characteristic[str]):
     @classmethod
     def decode(cls, data: bytes) -> str:
-        return data.partition(b"\x00")[0].decode("ASCII", "replace")
+        return data.partition(b"\x00")[0].decode("latin-1", "replace")
 
     @classmethod
     def encode(cls, value: str) -> bytes:
-        return value.encode("ASCII")
+        return value.encode("latin-1")
 
 
 @dataclass
