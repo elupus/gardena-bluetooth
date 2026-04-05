@@ -208,6 +208,41 @@ class CharacteristicLongArray(Characteristic[list[int]]):
 
 
 @dataclass
+class CharacteristicUInt16Array(Characteristic[list[int]]):
+    @classmethod
+    def decode(cls, data: bytes) -> list[int]:
+        return [
+            int.from_bytes(data[i : i + 2], "little", signed=False)
+            for i in range(0, len(data), 2)
+        ]
+
+    @classmethod
+    def encode(cls, value: list[int]) -> bytes:
+        return b"".join(v.to_bytes(2, "little", signed=False) for v in value)
+
+
+@dataclass
+class CharacteristicUInt16PairArray(Characteristic[list[tuple[int, int]]]):
+    @classmethod
+    def decode(cls, data: bytes) -> list[tuple[int, int]]:
+        return [
+            (
+                int.from_bytes(data[i : i + 2], "little", signed=False),
+                int.from_bytes(data[i + 2 : i + 4], "little", signed=False),
+            )
+            for i in range(0, len(data), 4)
+        ]
+
+    @classmethod
+    def encode(cls, value: list[tuple[int, int]]) -> bytes:
+        return b"".join(
+            v[0].to_bytes(2, "little", signed=False)
+            + v[1].to_bytes(2, "little", signed=False)
+            for v in value
+        )
+
+
+@dataclass
 class CharacteristicWeekday(Characteristic[list[bool]]):
     @classmethod
     def decode(cls, data: bytes) -> list[bool]:

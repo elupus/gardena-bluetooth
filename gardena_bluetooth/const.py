@@ -16,6 +16,7 @@ from .parse import (
     CharacteristicNullStringUf8,
     CharacteristicTimeArray,
     CharacteristicUInt16,
+    CharacteristicUInt16PairArray,
     CharacteristicIntKeys,
     Service,
     ProductType,
@@ -124,9 +125,11 @@ class AquaContourContours(Service):
     contour_transmit = CharacteristicBytes(
         "98bd0b12-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
-    contour_info = CharacteristicBytes(
+    contour_info = CharacteristicUInt16PairArray(
         "98bd0b13-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
+    """First value is cycle time, second is precipitation rate"""
+
     contour_name_1 = CharacteristicNullString(
         "98bd0b1a-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
