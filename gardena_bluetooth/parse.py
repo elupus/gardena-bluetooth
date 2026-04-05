@@ -198,6 +198,20 @@ class CharacteristicUInt16(Characteristic[int]):
 
 
 @dataclass
+class CharacteristicIntArray(Characteristic[list[int]]):
+    @classmethod
+    def decode(cls, data: bytes) -> list[int]:
+        return [
+            int.from_bytes(data[i : i + 1], "little", signed=True)
+            for i in range(0, len(data), 1)
+        ]
+
+    @classmethod
+    def encode(cls, value: list[int]) -> bytes:
+        return b"".join(v.to_bytes(1, "little", signed=True) for v in value)
+
+
+@dataclass
 class CharacteristicLongArray(Characteristic[list[int]]):
     @classmethod
     def decode(cls, data: bytes) -> list[int]:

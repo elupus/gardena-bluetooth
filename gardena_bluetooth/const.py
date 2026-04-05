@@ -8,6 +8,7 @@ from .parse import (
     CharacteristicErrorData,
     CharacteristicInt,
     CharacteristicIntEnum,
+    CharacteristicIntArray,
     CharacteristicLong,
     CharacteristicLongArray,
     CharacteristicString,
@@ -358,7 +359,7 @@ class AquaContour(Service):
         "98bd0a12-0b0e-421a-84e5-ddbf75dc6de4"
     )
     frost_warning = CharacteristicBool("98bd0a15-0b0e-421a-84e5-ddbf75dc6de4")
-    active_contour = CharacteristicBytes("98bd0a16-0b0e-421a-84e5-ddbf75dc6de4")
+    active_contour = CharacteristicIntArray("98bd0a16-0b0e-421a-84e5-ddbf75dc6de4")
     operation_mode = CharacteristicIntEnum(
         "98bd0a17-0b0e-421a-84e5-ddbf75dc6de4", enum=AquaContourOperationMode
     )
