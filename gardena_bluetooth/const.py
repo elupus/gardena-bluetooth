@@ -19,6 +19,7 @@ from .parse import (
     CharacteristicUInt16,
     CharacteristicUInt16PairArray,
     CharacteristicIntKeys,
+    CharacteristicPnpId,
     Service,
     ProductType,
 )
@@ -240,8 +241,10 @@ class Schedule_5(Schedule, instance=5):
 class DeviceInformation(Service):
     uuid = "0000180a-0000-1000-8000-00805f9b34fb"
     model_number = CharacteristicString("00002a24-0000-1000-8000-00805f9b34fb")
+    serial_number = CharacteristicString("00002a25-0000-1000-8000-00805f9b34fb")
     firmware_version = CharacteristicString("00002a26-0000-1000-8000-00805f9b34fb")
     manufacturer_name = CharacteristicString("00002a29-0000-1000-8000-00805f9b34fb")
+    pnp_id = CharacteristicPnpId("00002a50-0000-1000-8000-00805f9b34fb")
 
 
 class Battery(Service):

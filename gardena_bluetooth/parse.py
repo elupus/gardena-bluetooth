@@ -88,6 +88,38 @@ class Characteristic(Generic[CharacteristicType]):
 
 
 @dataclass
+class CharacteristicPnpIdData:
+    source_id: int
+    vendor_id: int
+    product_id: int
+    product_version: int
+
+
+@dataclass
+class CharacteristicPnpId(Characteristic[CharacteristicPnpIdData]):
+    @classmethod
+    def decode(cls, data: bytes) -> CharacteristicPnpIdData:
+        if len(data) != 7:
+            raise ValueError(f"Invalid length of pnp data {data}")
+
+        return CharacteristicPnpIdData(
+            int.from_bytes(data[0:1], "little"),
+            int.from_bytes(data[1:3], "little"),
+            int.from_bytes(data[3:5], "little"),
+            int.from_bytes(data[5:7], "little"),
+        )
+
+    @classmethod
+    def encode(cls, value: CharacteristicPnpIdData) -> bytes:
+        return (
+            value.source_id.to_bytes(1, "little", signed=False)
+            + value.vendor_id.to_bytes(2, "little", signed=False)
+            + value.product_id.to_bytes(2, "little", signed=False)
+            + value.product_version.to_bytes(2, "little", signed=False)
+        )
+
+
+@dataclass
 class CharacteristicBytes(Characteristic[bytes]):
     @classmethod
     def decode(cls, data: bytes) -> bytes:
