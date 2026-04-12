@@ -8,6 +8,7 @@ from typing import TypeVar, overload
 from bleak import BleakClient
 from bleak.exc import BleakError
 from bleak.backends.device import BLEDevice
+from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak_retry_connector import establish_connection
 
 from .exceptions import (
@@ -239,6 +240,49 @@ class Client:
 
         data = char.encode(value)
         await self.write_char_raw(char.uuid, data, response)
+
+    async def subscribe_char_raw(
+        self, uuid: str, callback: Callable[[BleakGATTCharacteristic, bytes], None]
+    ) -> Callable[[], Awaitable[None]]:
+        async with self._client() as client:
+            """Write data to a characteristic."""
+            characteristic = client.services.get_characteristic(uuid)
+            if characteristic is None:
+                raise CharacteristicNotFound(f"Unable to find characteristic {uuid}")
+
+            client.start_notify(characteristic, callback)
+
+            async def _cleanup():
+                await client.stop_notify(characteristic)
+
+            return _cleanup
+
+    async def subscribe_char(
+        self,
+        char: Characteristic[CharacteristicType],
+        callback: Callable[[CharacteristicType], None],
+    ):
+        def _callback(char_raw: BleakGATTCharacteristic, data: bytes):
+            if char_raw.uuid != char.uuid:
+                LOGGER.warning(
+                    "Unexpected uuid in callback for %s. Expected %s, actual %s",
+                    char.uuid,
+                    char_raw.uuid,
+                )
+                return
+
+            try:
+                value = char.decode(data)
+            except ValueError:
+                LOGGER.warning(
+                    "Failed to parse notification data %s into char %s", data, char
+                )
+                return
+
+            LOGGER.debug("Got notification for %s with value %s", char.name, value)
+            callback(value)
+
+        return self.subscribe_char_raw(char.uuid, _callback)
 
     async def update_timestamp(self, char: CharacteristicTime, now: datetime):
         try:
