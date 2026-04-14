@@ -388,11 +388,11 @@ class Service:
     uuid: ClassVar[str]
     variant: ClassVar[str | None] = None
     products: ClassVar[set[ProductType]] = set(ProductType)
-    registry: ClassVar[dict[str, list[Self]]] = {}
+    registry: ClassVar[dict[str, list[type[Self]]]] = {}
     characteristics: ClassVar[dict[str, Characteristic]] = {}
 
     @classmethod
-    def find_service(cls, uuid: str, product_type: ProductType) -> Self | None:
+    def find_service(cls, uuid: str, product_type: ProductType) -> type[Self] | None:
         services = cls.registry.get(uuid, [])
         for service in services:
             if product_type in service.products:
@@ -400,7 +400,7 @@ class Service:
         return None
 
     @classmethod
-    def services_for_product_type(cls, product_type: ProductType) -> list[Self]:
+    def services_for_product_type(cls, product_type: ProductType) -> list[type[Self]]:
         """Get all services for a product type."""
         return [
             service
