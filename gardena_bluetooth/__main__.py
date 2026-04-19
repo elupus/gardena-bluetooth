@@ -2,18 +2,14 @@ import asyncio
 from functools import partial
 import asyncclick as click
 from bleak import (
-    AdvertisementData,
     BleakClient,
     BleakError,
-    BleakScanner,
-    BLEDevice,
 )
 from bleak.uuids import uuidstr_to_str
 from bleak.backends.characteristic import BleakGATTCharacteristic
 
-from .const import FotaService, ScanService
-from .parse import Characteristic, ManufacturerData, Service, CharacteristicBytes
-from .scan import async_get_devices
+from .parse import Characteristic, Service, CharacteristicBytes
+from .scan import async_get_devices, async_scan_devices
 
 IGNORED_NOTIFY_UUIDS = {
     # SMP
@@ -30,30 +26,20 @@ async def main():
 async def scan():
     click.echo("Scanning for devices")
 
-    devices = set()
-
-    def detected(device: BLEDevice, advertisement: AdvertisementData):
-        if device not in devices:
-            if ScanService not in advertisement.service_uuids:
-                return
-            devices.add(device)
+    async for data in async_scan_devices():
+        advertisement = data.advertisement
+        device = data.ble_device
+        manufacturer_data = data.manufacturer_data
 
         click.echo(f"Device: {device}")
         for service in advertisement.service_uuids:
             click.echo(f" - Service: {service} {uuidstr_to_str(service)}")
         click.echo(f" - Data: {advertisement.service_data}")
         click.echo(f" - Manu: {advertisement.manufacturer_data}")
-
-        if data := advertisement.manufacturer_data.get(ManufacturerData.company):
-            decoded = ManufacturerData.decode(data)
-            click.echo(f" -     : {decoded}")
+        click.echo(f" -     : {manufacturer_data}")
 
         click.echo(f" - RSSI: {advertisement.rssi}")
         click.echo()
-
-    async with BleakScanner(detected, service_uuids=[ScanService, FotaService]):
-        while True:
-            await asyncio.sleep(1)
 
 
 @main.command()

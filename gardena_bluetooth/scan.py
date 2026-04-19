@@ -3,6 +3,7 @@ import contextlib
 import logging
 import dataclasses
 
+from collections.abc import AsyncGenerator
 from bleak import BleakScanner, BaseBleakScanner, AdvertisementData, BLEDevice
 
 from .parse import ManufacturerData
@@ -17,6 +18,7 @@ DEFAULT_MANUFACTURER_DATA_TIMEOUT = 15.0
 @dataclasses.dataclass
 class ScanResult:
     manufacturer_data: ManufacturerData
+    advertisement: AdvertisementData
     ble_device: BLEDevice
 
 
@@ -50,6 +52,31 @@ async def advertisement_queue(backend: type[BaseBleakScanner] | None = None):
         await scanner.stop()
 
 
+async def async_scan_devices(
+    backend: type[BaseBleakScanner] | None = None,
+) -> AsyncGenerator[ScanResult]:
+    devices: dict[str, ScanResult] = {}
+    """Async iterator that accumulate manufacturer data of devices."""
+
+    async with advertisement_queue(backend) as queue:
+        while True:
+            device, advertisement = await queue.get()
+            if ScanService not in advertisement.service_uuids:
+                continue
+
+            data = devices.get(device.address)
+            if data is None:
+                data = ScanResult(ManufacturerData(), advertisement, device)
+                devices[device.address] = data
+
+            data.ble_device = device
+            data.advertisement = advertisement
+            data.manufacturer_data.update(
+                advertisement.manufacturer_data.get(ManufacturerData.company, b"")
+            )
+            yield data
+
+
 async def async_get_devices(
     addresses: set[str],
     *,
@@ -64,29 +91,30 @@ async def async_get_devices(
     if not addresses:
         return set()
 
-    async with advertisement_queue(backend) as queue, asyncio.timeout(timeout):
-        while True:
-            device, advertisement = await queue.get()
-            if device.address not in addresses:
-                continue
+    try:
+        async with asyncio.timeout(timeout):
+            async for result in async_scan_devices(backend):
+                if result.ble_device.address not in addresses:
+                    continue
 
-            if (result := devices.get(device.address)) is None:
-                result = ScanResult(ManufacturerData(), device)
-                devices[device.address] = result
+                devices[result.ble_device.address] = result
+                if any(
+                    getattr(result.manufacturer_data, field, None) is None
+                    for field in fields
+                ):
+                    continue
 
-            result.manufacturer_data.update(
-                advertisement.manufacturer_data.get(ManufacturerData.company, b"")
+                done.add(result.ble_device.address)
+                if done == addresses:
+                    break
+
+    except TimeoutError:
+        missing = addresses - devices.keys()
+        if missing:
+            LOGGER.debug(
+                "One or more of the requested address was not found: %s", missing
             )
-
-            if any(
-                getattr(result.manufacturer_data, field, None) is None
-                for field in fields
-            ):
-                continue
-
-            done.add(device.address)
-            if done == addresses:
-                break
+            raise
 
     LOGGER.debug("Device data %s, incomplete %s", devices, addresses - done)
     return devices
