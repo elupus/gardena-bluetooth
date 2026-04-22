@@ -203,6 +203,12 @@ class AquaContourSchedule(Service):
 
 class Schedule(Service, ABC):
     products = set(ProductType) - {ProductType.AQUA_CONTOURS}
+    start_time: ClassVar[CharacteristicLong]
+    duration: ClassVar[CharacteristicLong]
+    weekdays: ClassVar[CharacteristicWeekday]
+    valve_link: ClassVar[CharacteristicBytes]
+    active: ClassVar[CharacteristicBool]
+    sensor_link: ClassVar[CharacteristicBool]
 
     def __init_subclass__(cls, *, instance: int, **kwargs):
         def _uuid(offset: int) -> str:
