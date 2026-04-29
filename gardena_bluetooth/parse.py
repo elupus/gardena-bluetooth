@@ -1,8 +1,9 @@
 from abc import ABC
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone, time
 from enum import IntEnum, Enum, auto
 from typing import ClassVar, Generic, Self, TypeVar
+from calendar import Day
 
 
 def pretty_name(name: str):
@@ -289,18 +290,43 @@ class CharacteristicUInt16PairArray(Characteristic[list[tuple[int, int]]]):
 
 
 @dataclass
-class CharacteristicWeekday(Characteristic[list[bool]]):
+class CharacteristicWeekdays(Characteristic[set[Day]]):
     @classmethod
-    def decode(cls, data: bytes) -> list[bool]:
+    def decode(cls, data: bytes) -> set[Day]:
         value = int.from_bytes(data, "little", signed=False)
-        return [(value >> i) & 1 != 0 for i in range(7)]
+        return {Day(i) for i in range(8) if (value >> i) & 1}
 
     @classmethod
-    def encode(cls, value: list[bool]) -> bytes:
+    def encode(cls, value: set[Day]) -> bytes:
         int_value = 0
-        for i, day in enumerate(value):
-            if day:
-                int_value |= 1 << i
+        for day in value:
+            int_value |= 1 << day.value
+        return int_value.to_bytes(1, "little", signed=False)
+
+
+class Contour(IntEnum):
+    CONTOUR_1 = 0
+    CONTOUR_2 = 1
+    CONTOUR_3 = 2
+    CONTOUR_4 = 3
+    CONTOUR_5 = 4
+    CONTOUR_6 = 5
+    CONTOUR_7 = 6
+    CONTOUR_8 = 7
+
+
+@dataclass
+class CharacteristicContours(Characteristic[set[Contour]]):
+    @classmethod
+    def decode(cls, data: bytes) -> set[Contour]:
+        value = int.from_bytes(data, "little", signed=False)
+        return {Contour(i) for i in range(8) if (value >> i) & 1}
+
+    @classmethod
+    def encode(cls, value: set[Contour]) -> bytes:
+        int_value = 0
+        for x in value:
+            int_value |= 1 << x.value
         return int_value.to_bytes(1, "little", signed=False)
 
 
@@ -316,6 +342,36 @@ class CharacteristicTime(Characteristic[datetime]):
         return int(value.replace(tzinfo=timezone.utc).timestamp()).to_bytes(
             4, "little", signed=True
         )
+
+
+@dataclass
+class CharacteristicTimeOfDay(Characteristic[time]):
+    @classmethod
+    def decode(cls, data: bytes) -> time:
+        value = int.from_bytes(data, "little")
+        minutes, seconds = divmod(value, 60)
+        hours, minutes = divmod(minutes, 60)
+        return time(hours, minutes, seconds)
+
+    @classmethod
+    def encode(cls, value: time) -> bytes:
+        return (
+            timedelta(hours=value.hour, minutes=value.minute, seconds=value.second)
+            .total_seconds()
+            .to_bytes(4, "little", signed=True)
+        )
+
+
+@dataclass
+class CharacteristicTimeDelta(Characteristic[timedelta]):
+    @classmethod
+    def decode(cls, data: bytes) -> timedelta:
+        value = int.from_bytes(data, "little")
+        return timedelta(seconds=value)
+
+    @classmethod
+    def encode(cls, value: timedelta) -> bytes:
+        return value.total_seconds().to_bytes(4, "little", signed=True)
 
 
 @dataclass
@@ -381,6 +437,38 @@ class CharacteristicErrorData[T: IntEnum](Characteristic[ErrorData[T]]):
             ),
             *value.error_code.to_bytes(1, "little", signed=True),
         ]
+
+
+@dataclass
+class CharacteristicScheduleData:
+    start_time: time
+    duration: timedelta
+    weekdays: set[Day]
+    active: bool
+    contours: set[Contour]
+
+
+@dataclass
+class CharacteristicSchedule(Characteristic[CharacteristicScheduleData]):
+    @classmethod
+    def decode(cls, data: bytes) -> CharacteristicScheduleData:
+        return CharacteristicScheduleData(
+            CharacteristicTimeOfDay.decode(data[0:4]),
+            CharacteristicTimeDelta.decode(data[4:8]),
+            CharacteristicWeekdays.decode(data[8:9]),
+            CharacteristicBool.decode(data[9:10]),
+            CharacteristicContours.decode(data[10:11]),
+        )
+
+    @classmethod
+    def encode(cls, value: CharacteristicScheduleData) -> bytes:
+        return (
+            CharacteristicTimeOfDay.encode(value.start_time)
+            + CharacteristicTimeDelta.encode(value.duration)
+            + CharacteristicWeekdays.encode(value.weekdays)
+            + CharacteristicBool.encode(value.active)
+            + CharacteristicContours.encode(value.contours)
+        )
 
 
 class Service:

@@ -3,7 +3,10 @@ from enum import IntEnum
 from typing import ClassVar
 from .parse import (
     CharacteristicBool,
-    CharacteristicWeekday,
+    CharacteristicSchedule,
+    CharacteristicTimeDelta,
+    CharacteristicTimeOfDay,
+    CharacteristicWeekdays,
     CharacteristicBytes,
     CharacteristicErrorData,
     CharacteristicInt,
@@ -154,58 +157,58 @@ class AquaContourSchedule(Service):
     products = {ProductType.AQUA_CONTOURS}
     variant = "1"
 
-    schedule_1 = CharacteristicBytes(
+    schedule_1 = CharacteristicSchedule(
         "98bd0c11-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
-    schedule_2 = CharacteristicBytes(
+    schedule_2 = CharacteristicSchedule(
         "98bd0c12-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
-    schedule_3 = CharacteristicBytes(
+    schedule_3 = CharacteristicSchedule(
         "98bd0c13-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
-    schedule_4 = CharacteristicBytes(
+    schedule_4 = CharacteristicSchedule(
         "98bd0c14-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
-    schedule_5 = CharacteristicBytes(
+    schedule_5 = CharacteristicSchedule(
         "98bd0c15-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
-    schedule_6 = CharacteristicBytes(
+    schedule_6 = CharacteristicSchedule(
         "98bd0c16-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
-    schedule_7 = CharacteristicBytes(
+    schedule_7 = CharacteristicSchedule(
         "98bd0c17-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
-    schedule_8 = CharacteristicBytes(
+    schedule_8 = CharacteristicSchedule(
         "98bd0c18-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
-    schedule_9 = CharacteristicBytes(
+    schedule_9 = CharacteristicSchedule(
         "98bd0c19-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
-    schedule_10 = CharacteristicBytes(
+    schedule_10 = CharacteristicSchedule(
         "98bd0c1a-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
-    schedule_11 = CharacteristicBytes(
+    schedule_11 = CharacteristicSchedule(
         "98bd0c1b-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
-    schedule_12 = CharacteristicBytes(
+    schedule_12 = CharacteristicSchedule(
         "98bd0c1c-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
-    schedule_13 = CharacteristicBytes(
+    schedule_13 = CharacteristicSchedule(
         "98bd0c1d-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
-    schedule_14 = CharacteristicBytes(
+    schedule_14 = CharacteristicSchedule(
         "98bd0c1e-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
-    schedule_15 = CharacteristicBytes(
+    schedule_15 = CharacteristicSchedule(
         "98bd0c1f-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
 
 
 class Schedule(Service, ABC):
     products = set(ProductType) - {ProductType.AQUA_CONTOURS}
-    start_time: ClassVar[CharacteristicLong]
-    duration: ClassVar[CharacteristicLong]
-    weekdays: ClassVar[CharacteristicWeekday]
+    start_time: ClassVar[CharacteristicTimeOfDay]
+    duration: ClassVar[CharacteristicTimeDelta]
+    weekdays: ClassVar[CharacteristicWeekdays]
     valve_link: ClassVar[CharacteristicBytes]
     active: ClassVar[CharacteristicBool]
     sensor_link: ClassVar[CharacteristicBool]
@@ -215,9 +218,9 @@ class Schedule(Service, ABC):
             return f"98bd0c{0x10 * instance + offset:02x}-0b0e-421a-84e5-ddbf75dc6de4"
 
         cls.uuid = _uuid(0)
-        cls.start_time = CharacteristicLong(_uuid(1), name="Start Time")
-        cls.duration = CharacteristicLong(_uuid(2), name="Duration")
-        cls.weekdays = CharacteristicWeekday(_uuid(3), name="Weekdays")
+        cls.start_time = CharacteristicTimeOfDay(_uuid(1), name="Start Time")
+        cls.duration = CharacteristicTimeDelta(_uuid(2), name="Duration")
+        cls.weekdays = CharacteristicWeekdays(_uuid(3), name="Weekdays")
         cls.valve_link = CharacteristicBytes(_uuid(4), name="Valve Link")
         cls.active = CharacteristicBool(_uuid(5), name="Active")
         cls.sensor_link = CharacteristicBool(_uuid(6), name="Sensor Link")
