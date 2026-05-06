@@ -89,7 +89,7 @@ async def async_get_devices(
     done: set[str] = set()
 
     if not addresses:
-        return set()
+        return devices
 
     try:
         async with asyncio.timeout(timeout):
