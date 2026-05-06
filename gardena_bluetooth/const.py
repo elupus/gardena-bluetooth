@@ -3,6 +3,7 @@ from enum import IntEnum
 from typing import ClassVar
 from .parse import (
     CharacteristicBool,
+    CharacteristicEventHistory,
     CharacteristicSchedule,
     CharacteristicTimeDelta,
     CharacteristicTimeOfDay,
@@ -25,6 +26,8 @@ from .parse import (
     CharacteristicPnpId,
     Service,
     ProductType,
+    SkipReason,
+    ActivationReason,
 )
 
 PRODUCT_NAMES = {
@@ -59,7 +62,9 @@ class Valve(Service):
     connected_state = CharacteristicBool("98bd0f12-0b0e-421a-84e5-ddbf75dc6de4")
     remaining_open_time = CharacteristicLong("98bd0f13-0b0e-421a-84e5-ddbf75dc6de4")
     manual_watering_time = CharacteristicLong("98bd0f14-0b0e-421a-84e5-ddbf75dc6de4")
-    activation_reason = CharacteristicInt("98bd0f15-0b0e-421a-84e5-ddbf75dc6de4")
+    activation_reason = CharacteristicIntEnum(
+        "98bd0f15-0b0e-421a-84e5-ddbf75dc6de4", enum=ActivationReason
+    )
 
 
 class ValveX(Service, ABC):
@@ -68,7 +73,7 @@ class ValveX(Service, ABC):
     error = ClassVar[CharacteristicInt]
     state: ClassVar[CharacteristicBool]
     remaining_time_open: ClassVar[CharacteristicLong]
-    activation_reason: ClassVar[CharacteristicInt]
+    activation_reason: ClassVar[CharacteristicIntEnum]
     start_watering = ClassVar[CharacteristicString]
     stop_watering = ClassVar[CharacteristicString]
 
@@ -83,7 +88,9 @@ class Valve1(ValveX):
     error = CharacteristicInt("98bda003-0b0e-421a-84e5-ddbf75dc6de4")
     state = CharacteristicBool("98bda008-0b0e-421a-84e5-ddbf75dc6de4")
     remaining_time_open = CharacteristicLong("98bda010-0b0e-421a-84e5-ddbf75dc6de4")
-    activation_reason = CharacteristicInt("98bda011-0b0e-421a-84e5-ddbf75dc6de4")
+    activation_reason = CharacteristicIntEnum(
+        "98bda011-0b0e-421a-84e5-ddbf75dc6de4", enum=ActivationReason
+    )
     start_watering = CharacteristicIntKeys("98bda020-0b0e-421a-84e5-ddbf75dc6de4")
     stop_watering = CharacteristicIntKeys("98bda021-0b0e-421a-84e5-ddbf75dc6de4")
 
@@ -98,7 +105,9 @@ class Valve2(ValveX):
     error = CharacteristicInt("98bda103-0b0e-421a-84e5-ddbf75dc6de4")
     state = CharacteristicBool("98bda108-0b0e-421a-84e5-ddbf75dc6de4")
     remaining_time_open = CharacteristicLong("98bda110-0b0e-421a-84e5-ddbf75dc6de4")
-    activation_reason = CharacteristicInt("98bda111-0b0e-421a-84e5-ddbf75dc6de4")
+    activation_reason = CharacteristicIntEnum(
+        "98bda111-0b0e-421a-84e5-ddbf75dc6de4", enum=ActivationReason
+    )
     start_watering = CharacteristicIntKeys("98bda120-0b0e-421a-84e5-ddbf75dc6de4")
     stop_watering = CharacteristicIntKeys("98bda121-0b0e-421a-84e5-ddbf75dc6de4")
 
@@ -280,7 +289,9 @@ class WateringHistory(Service):
 
     timestamp_array = CharacteristicTimeArray("98bd0d11-0b0e-421a-84e5-ddbf75dc6de4")
     timestamp_count = CharacteristicInt("98bd0d12-0b0e-421a-84e5-ddbf75dc6de4")
-    skip_reason = CharacteristicBytes("98bd0d13-0b0e-421a-84e5-ddbf75dc6de4")
+    skip_reason = CharacteristicIntEnum(
+        "98bd0d13-0b0e-421a-84e5-ddbf75dc6de4", enum=SkipReason
+    )
     watering_duration = CharacteristicLongArray("98bd0d14-0b0e-421a-84e5-ddbf75dc6de4")
     watering_skipped = CharacteristicBool("98bd0d15-0b0e-421a-84e5-ddbf75dc6de4")
     skipped_schedule_number = CharacteristicInt("98bd0d16-0b0e-421a-84e5-ddbf75dc6de4")
@@ -349,7 +360,7 @@ class AquaContourErrorCode(IntEnum):
 
 class EventHistory(Service):
     uuid = "98bd0120-0b0e-421a-84e5-ddbf75dc6de4"
-    history = CharacteristicBytes("98bd0121-0b0e-421a-84e5-ddbf75dc6de4")
+    history = CharacteristicEventHistory("98bd0121-0b0e-421a-84e5-ddbf75dc6de4")
     error = CharacteristicErrorData(
         "98bd0122-0b0e-421a-84e5-ddbf75dc6de4", enum=AquaContourErrorCode
     )
@@ -404,8 +415,8 @@ class AquaContourWatering(Service):
     manual_watering_time = CharacteristicLong(
         "98bd0d13-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
-    activation_reason = CharacteristicInt(
-        "98bd0d14-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    activation_reason = CharacteristicIntEnum(
+        "98bd0d14-0b0e-421a-84e5-ddbf75dc6de4", variant="1", enum=ActivationReason
     )
     watering_skipped = CharacteristicBool(
         "98bd0d15-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
@@ -413,11 +424,11 @@ class AquaContourWatering(Service):
     skipped_schedule_number = CharacteristicInt(
         "98bd0d15-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
-    watering_control_error = CharacteristicInt(
-        "98bd0d16-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    watering_control_error = CharacteristicIntEnum(
+        "98bd0d16-0b0e-421a-84e5-ddbf75dc6de4", variant="1", enum=AquaContourErrorCode
     )
-    skipped_reason = CharacteristicInt(
-        "98bd0d17-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    skipped_reason = CharacteristicIntEnum(
+        "98bd0d17-0b0e-421a-84e5-ddbf75dc6de4", variant="1", enum=SkipReason
     )
     watering_pause = CharacteristicInt(
         "98bd0d18-0b0e-421a-84e5-ddbf75dc6de4", variant="1"

@@ -335,7 +335,10 @@ class CharacteristicTime(Characteristic[datetime]):
     @classmethod
     def decode(cls, data: bytes) -> datetime:
         value = int.from_bytes(data, "little")
-        return datetime.fromtimestamp(value, timezone.utc).replace(tzinfo=None)
+        try:
+            return datetime.fromtimestamp(value, timezone.utc).replace(tzinfo=None)
+        except OverflowError as exc:
+            raise ValueError(f"Invalid timestamp {value}") from exc
 
     @classmethod
     def encode(cls, value: datetime) -> bytes:
@@ -401,7 +404,7 @@ class CharacteristicIntEnum[T: IntEnum](CharacteristicInt):
 
 @dataclass
 class ErrorData[T: IntEnum]:
-    current_event_index: int
+    index: int
     total_events: int
     time_stamp: datetime
     error_code: T | int
@@ -430,7 +433,7 @@ class CharacteristicErrorData[T: IntEnum](Characteristic[ErrorData[T]]):
     @classmethod
     def encode(cls, value: ErrorData[T]) -> bytes:
         return [
-            *value.current_event_index.to_bytes(1, "little", signed=True),
+            *value.index.to_bytes(1, "little", signed=True),
             *value.total_events.to_bytes(1, "little", signed=True),
             *int(value.time_stamp.replace(tzinfo=timezone.utc).timestamp()).to_bytes(
                 4, "little", signed=True
@@ -515,11 +518,92 @@ class Service:
 
 class EnumOrInt(IntEnum):
     @classmethod
-    def enum_or_int(cls, value: int):
+    def enum_or_int(cls, value: int) -> Self | int:
         try:
             return cls(value)
         except ValueError:
             return value
+
+    @classmethod
+    def decode(cls, data: bytes) -> Self | int:
+        raw = int.from_bytes(data, "little", signed=True)
+        return cls.enum_or_int(raw)
+
+    @classmethod
+    def encode(cls, value: Self | int) -> bytes:
+        return value.to_bytes(1, "little", signed=True)
+
+
+class SkipReason(EnumOrInt):
+    NONE = 0
+    RAIN_PAUSE = 1
+    HUMIDITY_SENSOR = 2
+    RAIN_SENSOR = 3
+    WATERING_ALREADY_ACTIVE = 4
+    BATTERY_EMPTY = 5
+    OTHER_SCHEDULE_WITH_SAME_START_TIME = 6
+    CONTOUR_NOT_ACTIVE = 7
+    CONTOUR_NOT_ENABLED_FOR_POSITION = 8
+    CONTOUR_DATA_INVALID = 9
+    POSITION_CHANGED = 10
+    CHARGING_CABLE_PLUGGED = 11
+    MANUAL_MODE = 12
+    NO_WATER = 14
+    VALVE_MOTOR_ERROR = 15
+    SPRINKLER_MOTOR_ERROR = 16
+    ROTATION_SENSOR_ERROR = 17
+    OPERATIONAL_MODE_CHANGED = 18
+    IRRIGATION_CONTROL_CHANGED = 19
+
+
+class ActivationReason(EnumOrInt):
+    NONE = 0
+    MANUAL = 1
+    SCHEDULE = 2
+    EXTERNAL = 3
+    SETUP = 4
+
+
+@dataclass
+class CharacteristicEventHistoryData:
+    index: int
+    total_events: int
+    timestamp: datetime
+    schedule_index: int
+    skip_reason: SkipReason
+    duration: timedelta
+
+    @classmethod
+    def decode(cls, data: bytes) -> Self:
+        return CharacteristicEventHistoryData(
+            CharacteristicInt.decode(data[0:1]),
+            CharacteristicInt.decode(data[1:2]),
+            CharacteristicTime.decode(data[2:6]),
+            CharacteristicInt.decode(data[6:7]),
+            SkipReason.decode(data[7:8]),
+            CharacteristicTimeDelta.decode(data[8:12]),
+        )
+
+    @classmethod
+    def encode(cls, value: Self) -> bytes:
+        return (
+            CharacteristicInt.encode(value.index)
+            + CharacteristicInt.encode(value.total_events)
+            + CharacteristicTime.encode(value.timestamp)
+            + CharacteristicInt.encode(value.schedule_index)
+            + SkipReason.encode(value.skip_reason)
+            + CharacteristicTimeDelta.encode(value.duration)
+        )
+
+
+class CharacteristicEventHistory(Characteristic[CharacteristicEventHistoryData]):
+    @classmethod
+    def decode(cls, data: bytes) -> CharacteristicEventHistoryData:
+        return CharacteristicEventHistoryData.decode(data)
+
+    @classmethod
+    def encode(cls, value: CharacteristicEventHistoryData) -> bytes:
+        return CharacteristicEventHistoryData.encode(value)
 
 
 class ProductGroup(EnumOrInt):

@@ -112,7 +112,7 @@ async def monitor(address: str):
                 char_parser,
                 err=True,
             )
-        click.echo(f"{service_name}.{char_parser.name}: {value}")
+        click.echo(f"{service_name}.{char_parser.name}: {value!r}")
 
     async def _char_read(
         client: BleakClient,
