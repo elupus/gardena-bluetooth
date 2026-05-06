@@ -1,18 +1,19 @@
 from datetime import datetime
+from enum import IntEnum
+
+import pytest
 
 from gardena_bluetooth.parse import (
+    CharacteristicErrorData,
+    CharacteristicIntEnum,
+    CharacteristicIntKeys,
+    CharacteristicNullString,
+    CharacteristicNullStringUf8,
+    CharacteristicString,
     ManufacturerData,
     ProductGroup,
     ProductType,
-    CharacteristicString,
-    CharacteristicNullStringUf8,
-    CharacteristicNullString,
-    CharacteristicIntEnum,
-    CharacteristicIntKeys,
-    CharacteristicErrorData,
 )
-from enum import IntEnum
-import pytest
 
 
 @pytest.mark.parametrize(

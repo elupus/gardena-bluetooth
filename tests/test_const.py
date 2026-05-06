@@ -1,13 +1,14 @@
+import pytest
+
 from gardena_bluetooth.const import (
-    Schedule_1,
     Schedule,
+    Schedule_1,
     Schedule_2,
     Schedule_3,
     Schedule_4,
     Schedule_5,
 )
-from gardena_bluetooth.parse import Service, Characteristic
-import pytest
+from gardena_bluetooth.parse import Characteristic, Service
 
 
 @pytest.mark.parametrize(

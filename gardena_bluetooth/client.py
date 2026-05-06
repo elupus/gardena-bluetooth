@@ -6,9 +6,9 @@ from datetime import datetime
 from typing import TypeVar, overload
 
 from bleak import BleakClient
-from bleak.exc import BleakError
-from bleak.backends.device import BLEDevice
 from bleak.backends.characteristic import BleakGATTCharacteristic
+from bleak.backends.device import BLEDevice
+from bleak.exc import BleakError
 from bleak_retry_connector import establish_connection
 
 from .exceptions import (

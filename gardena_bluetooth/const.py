@@ -1,33 +1,34 @@
 from abc import ABC
 from enum import IntEnum
 from typing import ClassVar
+
 from .parse import (
+    ActivationReason,
     CharacteristicBool,
-    CharacteristicEventHistory,
-    CharacteristicSchedule,
-    CharacteristicTimeDelta,
-    CharacteristicTimeOfDay,
-    CharacteristicWeekdays,
     CharacteristicBytes,
     CharacteristicErrorData,
+    CharacteristicEventHistory,
     CharacteristicInt,
-    CharacteristicIntEnum,
     CharacteristicIntArray,
+    CharacteristicIntEnum,
+    CharacteristicIntKeys,
     CharacteristicLong,
     CharacteristicLongArray,
-    CharacteristicString,
-    CharacteristicTime,
     CharacteristicNullString,
     CharacteristicNullStringUf8,
+    CharacteristicPnpId,
+    CharacteristicSchedule,
+    CharacteristicString,
+    CharacteristicTime,
     CharacteristicTimeArray,
+    CharacteristicTimeDelta,
+    CharacteristicTimeOfDay,
     CharacteristicUInt16,
     CharacteristicUInt16PairArray,
-    CharacteristicIntKeys,
-    CharacteristicPnpId,
-    Service,
+    CharacteristicWeekdays,
     ProductType,
+    Service,
     SkipReason,
-    ActivationReason,
 )
 
 PRODUCT_NAMES = {
@@ -488,3 +489,9 @@ class Fota(Service):
     image_identify = CharacteristicBytes("f000ffc1-0451-4000-b000-000000000000")
     image_block_id = CharacteristicBytes("f000ffc2-0451-4000-b000-000000000000")
     control_point = CharacteristicBytes("f000ffc5-0451-4000-b000-000000000000")
+
+
+class SMP(Service):
+    uuid = "8d53dc1d-1db7-4cd3-868b-8a527460aa84"
+
+    smp = CharacteristicBytes("DA2E7828-FBCE-4E01-AE9E-261174997C48")

@@ -3,7 +3,7 @@ from __future__ import annotations
 from bleak.uuids import register_uuids
 
 from .const import ScanService
-from .parse import Service, Characteristic
+from .parse import Characteristic, Service
 
 
 def prefix(name: str) -> str:

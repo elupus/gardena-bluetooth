@@ -1,10 +1,10 @@
-from bleak.backends.device import BLEDevice
-from bleak.exc import BleakError
 from unittest.mock import patch
 
 import pytest
+from bleak.backends.device import BLEDevice
+from bleak.exc import BleakError
 
-from gardena_bluetooth.client import CachedConnection, Client, DEFAULT_DELAY
+from gardena_bluetooth.client import DEFAULT_DELAY, CachedConnection, Client
 from gardena_bluetooth.exceptions import CommunicationFailure
 
 

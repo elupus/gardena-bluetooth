@@ -1,14 +1,15 @@
 import asyncio
 from functools import partial
+
 import asyncclick as click
 from bleak import (
     BleakClient,
     BleakError,
 )
-from bleak.uuids import uuidstr_to_str
 from bleak.backends.characteristic import BleakGATTCharacteristic
+from bleak.uuids import uuidstr_to_str
 
-from .parse import Characteristic, Service, CharacteristicBytes
+from .parse import Characteristic, CharacteristicBytes, Service
 from .scan import async_get_devices, async_scan_devices
 
 IGNORED_NOTIFY_UUIDS = {

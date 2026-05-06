@@ -1,9 +1,11 @@
 from abc import ABC
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone, time
-from enum import IntEnum, Enum, auto
-from typing import ClassVar, Generic, Self, TypeVar
 from calendar import Day
+from dataclasses import dataclass, field
+from datetime import datetime, time, timedelta, timezone
+from enum import Enum, IntEnum, auto
+from typing import ClassVar, Generic, Self, TypeVar
+
+CharacteristicType = TypeVar("CharacteristicType")
 
 
 def pretty_name(name: str):
@@ -57,7 +59,52 @@ class ProductType(Enum):
         return ProductType.UNKNOWN
 
 
-CharacteristicType = TypeVar("CharacteristicType")
+class EnumOrInt(IntEnum):
+    @classmethod
+    def enum_or_int(cls, value: int) -> Self | int:
+        try:
+            return cls(value)
+        except ValueError:
+            return value
+
+    @classmethod
+    def decode(cls, data: bytes) -> Self | int:
+        raw = int.from_bytes(data, "little", signed=True)
+        return cls.enum_or_int(raw)
+
+    @classmethod
+    def encode(cls, value: Self | int) -> bytes:
+        return value.to_bytes(1, "little", signed=True)
+
+
+class SkipReason(EnumOrInt):
+    NONE = 0
+    RAIN_PAUSE = 1
+    HUMIDITY_SENSOR = 2
+    RAIN_SENSOR = 3
+    WATERING_ALREADY_ACTIVE = 4
+    BATTERY_EMPTY = 5
+    OTHER_SCHEDULE_WITH_SAME_START_TIME = 6
+    CONTOUR_NOT_ACTIVE = 7
+    CONTOUR_NOT_ENABLED_FOR_POSITION = 8
+    CONTOUR_DATA_INVALID = 9
+    POSITION_CHANGED = 10
+    CHARGING_CABLE_PLUGGED = 11
+    MANUAL_MODE = 12
+    NO_WATER = 14
+    VALVE_MOTOR_ERROR = 15
+    SPRINKLER_MOTOR_ERROR = 16
+    ROTATION_SENSOR_ERROR = 17
+    OPERATIONAL_MODE_CHANGED = 18
+    IRRIGATION_CONTROL_CHANGED = 19
+
+
+class ActivationReason(EnumOrInt):
+    NONE = 0
+    MANUAL = 1
+    SCHEDULE = 2
+    EXTERNAL = 3
+    SETUP = 4
 
 
 @dataclass
@@ -514,54 +561,6 @@ class Service:
         for value in vars(cls).values():
             if isinstance(value, Characteristic):
                 cls.characteristics[value.uuid] = value
-
-
-class EnumOrInt(IntEnum):
-    @classmethod
-    def enum_or_int(cls, value: int) -> Self | int:
-        try:
-            return cls(value)
-        except ValueError:
-            return value
-
-    @classmethod
-    def decode(cls, data: bytes) -> Self | int:
-        raw = int.from_bytes(data, "little", signed=True)
-        return cls.enum_or_int(raw)
-
-    @classmethod
-    def encode(cls, value: Self | int) -> bytes:
-        return value.to_bytes(1, "little", signed=True)
-
-
-class SkipReason(EnumOrInt):
-    NONE = 0
-    RAIN_PAUSE = 1
-    HUMIDITY_SENSOR = 2
-    RAIN_SENSOR = 3
-    WATERING_ALREADY_ACTIVE = 4
-    BATTERY_EMPTY = 5
-    OTHER_SCHEDULE_WITH_SAME_START_TIME = 6
-    CONTOUR_NOT_ACTIVE = 7
-    CONTOUR_NOT_ENABLED_FOR_POSITION = 8
-    CONTOUR_DATA_INVALID = 9
-    POSITION_CHANGED = 10
-    CHARGING_CABLE_PLUGGED = 11
-    MANUAL_MODE = 12
-    NO_WATER = 14
-    VALVE_MOTOR_ERROR = 15
-    SPRINKLER_MOTOR_ERROR = 16
-    ROTATION_SENSOR_ERROR = 17
-    OPERATIONAL_MODE_CHANGED = 18
-    IRRIGATION_CONTROL_CHANGED = 19
-
-
-class ActivationReason(EnumOrInt):
-    NONE = 0
-    MANUAL = 1
-    SCHEDULE = 2
-    EXTERNAL = 3
-    SETUP = 4
 
 
 @dataclass
