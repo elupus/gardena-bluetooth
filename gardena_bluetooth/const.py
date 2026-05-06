@@ -18,6 +18,7 @@ from .parse import (
     CharacteristicNullStringUf8,
     CharacteristicPnpId,
     CharacteristicSchedule,
+    CharacteristicSMP,
     CharacteristicString,
     CharacteristicTime,
     CharacteristicTimeArray,
@@ -494,4 +495,4 @@ class Fota(Service):
 class SMP(Service):
     uuid = "8d53dc1d-1db7-4cd3-868b-8a527460aa84"
 
-    smp = CharacteristicBytes("DA2E7828-FBCE-4E01-AE9E-261174997C48")
+    smp = CharacteristicSMP("DA2E7828-FBCE-4E01-AE9E-261174997C48")

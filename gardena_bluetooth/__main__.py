@@ -148,10 +148,9 @@ async def monitor(address: str):
                     await _char_read(client, char, char_parser, service_name)
 
                 if "notify" in char.properties:
-                    if char.uuid not in IGNORED_NOTIFY_UUIDS:
-                        await client.start_notify(
-                            char, partial(_char_callback, service_name, char_parser)
-                        )
+                    await client.start_notify(
+                        char, partial(_char_callback, service_name, char_parser)
+                    )
 
         while True:
             await asyncio.sleep(1)

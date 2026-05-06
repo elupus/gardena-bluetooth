@@ -99,12 +99,99 @@ class SkipReason(EnumOrInt):
     IRRIGATION_CONTROL_CHANGED = 19
 
 
+class SMPGroup(EnumOrInt):
+    OS = 0
+    IMAGE = 1
+    STATISTICS = 2
+    SETTINGS = 3
+    LOG = 4
+    RUN_TEST = 5
+    SPLIT_IMAGE = 6
+    CRASH = 7
+    FILE = 8
+    SHELL = 9
+    ZEPHYR = 63
+    APPLICATION_BASE = 64
+
+
+class SMPOperation(EnumOrInt):
+    READ = 0
+    READ_RSP = 1
+    WRITE = 2
+    WRITE_RSP = 3
+    ERASE = 4
+    ERASE_RSP = 5
+    SHA256 = 6
+    SHA256_RSP = 7
+    UPLOAD = 8
+    UPLOAD_RSP = 9
+    FILE = 10
+    FILE_RSP = 11
+
+
 class ActivationReason(EnumOrInt):
     NONE = 0
     MANUAL = 1
     SCHEDULE = 2
     EXTERNAL = 3
     SETUP = 4
+
+
+@dataclass
+class CharacteristicSMPData:
+    res: int
+    ver: int
+    op: SMPOperation | int
+    flags: int
+    group: SMPGroup | int
+    sequence_num: int
+    command_id: int
+    payload: bytes = b""
+
+    @property
+    def data_length(self) -> int:
+        return len(self.payload)
+
+    @classmethod
+    def decode(cls, data: bytes) -> "CharacteristicSMPData":
+        if len(data) < 7:
+            raise ValueError(f"Invalid SMP frame length {len(data)}")
+
+        header = data[0]
+        res = (header >> 6) & 0x03
+        ver = (header >> 4) & 0x03
+        op = SMPOperation.enum_or_int(header & 0x0F)
+        flags = data[1]
+        data_length = int.from_bytes(data[2:4], "big")
+        group = SMPGroup.enum_or_int(data[4])
+        sequence_num = data[5]
+        command_id = data[6]
+        payload = data[7 : 7 + data_length]
+
+        return cls(
+            res=res,
+            ver=ver,
+            op=op,
+            flags=flags,
+            group=group,
+            sequence_num=sequence_num,
+            command_id=command_id,
+            payload=payload,
+        )
+
+    @classmethod
+    def encode(cls, value: "CharacteristicSMPData") -> bytes:
+        header = (
+            ((value.res & 0x03) << 6)
+            | ((value.ver & 0x03) << 4)
+            | (int(value.op) & 0x0F)
+        )
+        return (
+            bytes([header, value.flags])
+            + value.data_length.to_bytes(2, "big")
+            + bytes([int(value.group), value.sequence_num, value.command_id])
+            + value.payload
+        )
 
 
 @dataclass
@@ -176,6 +263,17 @@ class CharacteristicBytes(Characteristic[bytes]):
     @classmethod
     def encode(cls, value: bytes) -> bytes:
         return value
+
+
+@dataclass
+class CharacteristicSMP(Characteristic[CharacteristicSMPData]):
+    @classmethod
+    def decode(cls, data: bytes) -> CharacteristicSMPData:
+        return CharacteristicSMPData.decode(data)
+
+    @classmethod
+    def encode(cls, value: CharacteristicSMPData) -> bytes:
+        return CharacteristicSMPData.encode(value)
 
 
 @dataclass

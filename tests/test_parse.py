@@ -9,6 +9,7 @@ from gardena_bluetooth.parse import (
     CharacteristicIntKeys,
     CharacteristicNullString,
     CharacteristicNullStringUf8,
+    CharacteristicSMPData,
     CharacteristicString,
     ManufacturerData,
     ProductGroup,
@@ -111,6 +112,25 @@ def test_string_nulled():
     raw = b"abc\x00junk"
     data = CharacteristicNullString.decode(raw)
     assert data == "abc"
+
+
+def test_smp_data_encode_decode():
+    data = CharacteristicSMPData(
+        res=0,
+        ver=1,
+        op=2,
+        flags=0,
+        group=63,
+        sequence_num=7,
+        command_id=4,
+        payload=b"hello",
+    )
+    encoded = CharacteristicSMPData.encode(data)
+    decoded = CharacteristicSMPData.decode(encoded)
+
+    assert decoded == data
+    assert decoded.data_length == 5
+    assert decoded.payload == b"hello"
 
 
 def test_enum():
