@@ -70,7 +70,10 @@ class CachedConnection:
     """Recursive and delay closed client."""
 
     def __init__(
-        self, disconnect_delay: float, device_lookup: Callable[[], BLEDevice]
+        self,
+        disconnect_delay: float,
+        device_lookup: Callable[[], BLEDevice],
+        max_attempts=1,
     ) -> None:
         """Initialize cached client."""
 
@@ -80,6 +83,7 @@ class CachedConnection:
         self._lookup = device_lookup
         self._disconnect_delay = disconnect_delay
         self._disconnect_job = CallLaterJob(self._disconnect)
+        self._max_attempts = max_attempts
 
     async def disconnect(self):
         await self._disconnect_job.call_now()
@@ -96,7 +100,11 @@ class CachedConnection:
 
         LOGGER.debug("Connecting to %s", device.address)
         self._client = await establish_connection(
-            BleakClient, device, "Gardena Bluetooth", use_services_cache=True
+            BleakClient,
+            device,
+            "Gardena Bluetooth",
+            use_services_cache=True,
+            max_attempts=self._max_attempts,
         )
         LOGGER.debug("Connected to %s", device.address)
         return self._client
