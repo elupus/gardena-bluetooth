@@ -2,6 +2,7 @@ import pytest
 
 from gardena_bluetooth.const import (
     WATERING_COMMAND_SOURCE,
+    AquaContourBattery,
     Schedule,
     Schedule_1,
     Schedule_2,
@@ -12,7 +13,12 @@ from gardena_bluetooth.const import (
     Valve2,
     ValveX,
 )
-from gardena_bluetooth.parse import Characteristic, CharacteristicIntKeys, Service
+from gardena_bluetooth.parse import (
+    Characteristic,
+    CharacteristicIntKeys,
+    ProductType,
+    Service,
+)
 
 
 @pytest.mark.parametrize(
@@ -73,3 +79,24 @@ def test_valvex_stop_watering_payload_format():
     """The encoded stop payload carries just key 0 = COMMAND_SOURCE."""
     raw = Valve1.stop_watering.encode({0: WATERING_COMMAND_SOURCE})
     assert raw == b"0='18'"
+
+
+@pytest.mark.parametrize(
+    "product_type",
+    [
+        ProductType.AQUA_CONTOURS,
+        ProductType.WATER_COMPUTER,
+        ProductType.VALVE,
+    ],
+)
+def test_standard_battery_service_covers_water_control_family(
+    product_type: ProductType,
+) -> None:
+    """The standard BLE Battery Service (0x180f) is exposed by the AquaContour
+    family AND the newer Valve1/Valve2 family (wc_single, wc_dual, irrigation
+    valve). Without this, HA's gardena_bluetooth integration cannot surface a
+    battery sensor for those devices because services_for_product_type filters
+    by ProductType.
+    """
+    assert product_type in AquaContourBattery.products
+    assert AquaContourBattery in Service.services_for_product_type(product_type)
