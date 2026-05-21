@@ -1,6 +1,7 @@
 import pytest
 
 from gardena_bluetooth.const import (
+    AquaContourBattery,
     Schedule,
     Schedule_1,
     Schedule_2,
@@ -8,7 +9,7 @@ from gardena_bluetooth.const import (
     Schedule_4,
     Schedule_5,
 )
-from gardena_bluetooth.parse import Characteristic, Service
+from gardena_bluetooth.parse import Characteristic, ProductType, Service
 
 
 @pytest.mark.parametrize(
@@ -40,3 +41,24 @@ def test_id_uniqueness():
 
             for char in service.characteristics.values():
                 assert ids.setdefault(char.unique_id, char) is char
+
+
+@pytest.mark.parametrize(
+    "product_type",
+    [
+        ProductType.AQUA_CONTOURS,
+        ProductType.WATER_COMPUTER,
+        ProductType.VALVE,
+    ],
+)
+def test_standard_battery_service_covers_water_control_family(
+    product_type: ProductType,
+) -> None:
+    """The standard BLE Battery Service (0x180f) is exposed by the AquaContour
+    family AND the newer Valve1/Valve2 family (wc_single, wc_dual, irrigation
+    valve). Without this, HA's gardena_bluetooth integration cannot surface a
+    battery sensor for those devices because services_for_product_type filters
+    by ProductType.
+    """
+    assert product_type in AquaContourBattery.products
+    assert AquaContourBattery in Service.services_for_product_type(product_type)
