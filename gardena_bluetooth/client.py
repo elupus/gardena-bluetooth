@@ -3,7 +3,10 @@ import logging
 from collections.abc import Awaitable, Callable
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import TypeVar, overload
+from typing import TYPE_CHECKING, TypeVar, overload
+
+if TYPE_CHECKING:
+    from .const import ValveX
 
 from bleak import BleakClient
 from bleak.backends.characteristic import BleakGATTCharacteristic
@@ -291,6 +294,33 @@ class Client:
             callback(value)
 
         return self.subscribe_char_raw(char.uuid, _callback)
+
+    async def start_watering(
+        self,
+        service: "type[ValveX]",
+        duration_seconds: int,
+    ) -> None:
+        """Open a Valve1/Valve2-family valve for ``duration_seconds``.
+
+        Writes the LWM2M Execute payload reverse-engineered from
+        cloudless-garden/gardena-smart-local-api:
+        ``{0: WATERING_COMMAND_SOURCE, 1: str(duration_seconds)}`` →
+        ASCII bytes ``b"0='18',1='<n>'"``. Without key 0 the device
+        silently ignores the write. ``service`` must be a ValveX
+        subclass (e.g. ``Valve1`` or ``Valve2``).
+        """
+        from .const import WATERING_COMMAND_SOURCE
+
+        await self.write_char(
+            service.start_watering,
+            {0: WATERING_COMMAND_SOURCE, 1: str(duration_seconds)},
+        )
+
+    async def stop_watering(self, service: "type[ValveX]") -> None:
+        """Close a Valve1/Valve2-family valve."""
+        from .const import WATERING_COMMAND_SOURCE
+
+        await self.write_char(service.stop_watering, {0: WATERING_COMMAND_SOURCE})
 
     async def update_timestamp(self, char: CharacteristicTime, now: datetime):
         try:
