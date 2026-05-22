@@ -46,6 +46,13 @@ PRODUCT_NAMES = {
 ScanService = "98bd0001-0b0e-421a-84e5-ddbf75dc6de4"
 FotaService = "0000ffc0-0000-1000-8000-00805f9b34fb"
 
+# Source marker written as key 0 to ValveX.start_watering / .stop_watering.
+# Matches COMMAND_SOURCE in cloudless-garden/gardena-smart-local-api — the
+# value the smart gateway sends as command originator. Without this key,
+# the Valve1/Valve2 family (wc_single, wc_dual, G-1903x) silently ignores
+# the write even though the GATT layer accepts it.
+WATERING_COMMAND_SOURCE = "18"
+
 
 class Scan(Service):
     uuid = "98bd0001-0b0e-421a-84e5-ddbf75dc6de4"
