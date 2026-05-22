@@ -72,12 +72,12 @@ class Valve(Service):
 class ValveX(Service, ABC):
     available: ClassVar[CharacteristicBool]
     manual_watering_duration: ClassVar[CharacteristicLong]
-    error = ClassVar[CharacteristicInt]
+    error: ClassVar[CharacteristicInt]
     state: ClassVar[CharacteristicBool]
     remaining_time_open: ClassVar[CharacteristicLong]
     activation_reason: ClassVar[CharacteristicIntEnum]
-    start_watering = ClassVar[CharacteristicString]
-    stop_watering = ClassVar[CharacteristicString]
+    start_watering: ClassVar[CharacteristicIntKeys]
+    stop_watering: ClassVar[CharacteristicIntKeys]
 
 
 class Valve1(ValveX):
