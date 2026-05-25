@@ -1,7 +1,7 @@
 import pytest
 
 from gardena_bluetooth.const import (
-    AquaContourBattery,
+    StandardBattery,
     Schedule,
     Schedule_1,
     Schedule_2,
@@ -60,5 +60,5 @@ def test_standard_battery_service_covers_water_control_family(
     battery sensor for those devices because services_for_product_type filters
     by ProductType.
     """
-    assert product_type in AquaContourBattery.products
-    assert AquaContourBattery in Service.services_for_product_type(product_type)
+    assert product_type in StandardBattery.products
+    assert StandardBattery in Service.services_for_product_type(product_type)

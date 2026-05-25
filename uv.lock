@@ -113,7 +113,7 @@ wheels = [
 
 [[package]]
 name = "gardena-bluetooth"
-version = "2.6.0"
+version = "2.8.1"
 source = { editable = "." }
 dependencies = [
     { name = "bleak" },
