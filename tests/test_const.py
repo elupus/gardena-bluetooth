@@ -11,6 +11,8 @@ from gardena_bluetooth.const import (
     Valve1,
     Valve2,
     ValveX,
+    start_watering_payload,
+    stop_watering_payload,
 )
 from gardena_bluetooth.parse import Characteristic, CharacteristicIntKeys, Service
 
@@ -63,13 +65,15 @@ def test_valvex_start_stop_are_int_keys(service: type[ValveX]):
     assert isinstance(service.stop_watering, CharacteristicIntKeys)
 
 
-def test_valvex_start_watering_payload_format():
-    """The encoded start payload uses key 0 for COMMAND_SOURCE, key 1 for duration."""
-    raw = Valve1.start_watering.encode({0: WATERING_COMMAND_SOURCE, 1: "30"})
-    assert raw == b"0='18',1='30'"
+def test_start_watering_payload_helper():
+    """start_watering_payload builds the correct dict and encodes to expected bytes."""
+    payload = start_watering_payload(30)
+    assert payload == {0: "18", 1: "30"}
+    assert Valve1.start_watering.encode(payload) == b"0='18',1='30'"
 
 
-def test_valvex_stop_watering_payload_format():
-    """The encoded stop payload carries just key 0 = COMMAND_SOURCE."""
-    raw = Valve1.stop_watering.encode({0: WATERING_COMMAND_SOURCE})
-    assert raw == b"0='18'"
+def test_stop_watering_payload_helper():
+    """stop_watering_payload builds the correct dict and encodes to expected bytes."""
+    payload = stop_watering_payload()
+    assert payload == {0: "18"}
+    assert Valve1.stop_watering.encode(payload) == b"0='18'"

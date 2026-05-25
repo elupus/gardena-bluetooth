@@ -54,6 +54,16 @@ FotaService = "0000ffc0-0000-1000-8000-00805f9b34fb"
 WATERING_COMMAND_SOURCE = "18"
 
 
+def start_watering_payload(duration_seconds: int) -> dict[int, str]:
+    """LWM2M Execute payload to open a Valve1/Valve2-family valve."""
+    return {0: WATERING_COMMAND_SOURCE, 1: str(duration_seconds)}
+
+
+def stop_watering_payload() -> dict[int, str]:
+    """LWM2M Execute payload to close a Valve1/Valve2-family valve."""
+    return {0: WATERING_COMMAND_SOURCE}
+
+
 class Scan(Service):
     uuid = "98bd0001-0b0e-421a-84e5-ddbf75dc6de4"
 
