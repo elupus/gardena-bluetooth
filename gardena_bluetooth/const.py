@@ -46,11 +46,18 @@ PRODUCT_NAMES = {
 ScanService = "98bd0001-0b0e-421a-84e5-ddbf75dc6de4"
 FotaService = "0000ffc0-0000-1000-8000-00805f9b34fb"
 
-# Source marker written as key 0 to ValveX.start_watering / .stop_watering.
-# Matches COMMAND_SOURCE in cloudless-garden/gardena-smart-local-api — the
-# value the smart gateway sends as command originator. Without this key,
-# the Valve1/Valve2 family (wc_single, wc_dual, G-1903x) silently ignores
-# the write even though the GATT layer accepts it.
+# Origin marker written as key 0 to ValveX.start_watering / .stop_watering.
+# The Smart Water Control family (G-1903x: wc_single, wc_dual) runs a
+# Zephyr/LWM2M stack internally — the same Execute payload the Gardena
+# smart-gateway sends over its proprietary RF link is ALSO accepted as a
+# direct BLE GATT write, but only if key 0 carries this command-source
+# value. Without it the device acks the write and silently refuses to
+# actuate. The literal "18" is the gateway's COMMAND_SOURCE constant,
+# documented in the cloudless-garden reverse-engineering of the protocol:
+#   https://github.com/cloudless-garden/gardena-smart-local-api
+#   src/gardena_smart_local_api/protocol.py → COMMAND_SOURCE = "18"
+# Verified live on a G-19033-20 (firmware 1.1.1) — activation_reason reads
+# back as 18 while the valve is open, confirming the semantics.
 WATERING_COMMAND_SOURCE = "18"
 
 
