@@ -11,7 +11,6 @@ from .parse import (
     CharacteristicInt,
     CharacteristicIntArray,
     CharacteristicIntEnum,
-    CharacteristicIntKeys,
     CharacteristicLong,
     CharacteristicLongArray,
     CharacteristicNullString,
@@ -19,6 +18,7 @@ from .parse import (
     CharacteristicPnpId,
     CharacteristicSchedule,
     CharacteristicSMP,
+    CharacteristicStartStopWatering,
     CharacteristicString,
     CharacteristicTime,
     CharacteristicTimeArray,
@@ -76,8 +76,8 @@ class ValveX(Service, ABC):
     state: ClassVar[CharacteristicBool]
     remaining_time_open: ClassVar[CharacteristicLong]
     activation_reason: ClassVar[CharacteristicIntEnum]
-    start_watering: ClassVar[CharacteristicIntKeys]
-    stop_watering: ClassVar[CharacteristicIntKeys]
+    start_watering: ClassVar[CharacteristicStartStopWatering]
+    stop_watering: ClassVar[CharacteristicStartStopWatering]
 
 
 class Valve1(ValveX):
@@ -93,8 +93,12 @@ class Valve1(ValveX):
     activation_reason = CharacteristicIntEnum(
         "98bda011-0b0e-421a-84e5-ddbf75dc6de4", enum=ActivationReason
     )
-    start_watering = CharacteristicIntKeys("98bda020-0b0e-421a-84e5-ddbf75dc6de4")
-    stop_watering = CharacteristicIntKeys("98bda021-0b0e-421a-84e5-ddbf75dc6de4")
+    start_watering = CharacteristicStartStopWatering(
+        "98bda020-0b0e-421a-84e5-ddbf75dc6de4"
+    )
+    stop_watering = CharacteristicStartStopWatering(
+        "98bda021-0b0e-421a-84e5-ddbf75dc6de4"
+    )
 
 
 class Valve2(ValveX):
@@ -110,8 +114,12 @@ class Valve2(ValveX):
     activation_reason = CharacteristicIntEnum(
         "98bda111-0b0e-421a-84e5-ddbf75dc6de4", enum=ActivationReason
     )
-    start_watering = CharacteristicIntKeys("98bda120-0b0e-421a-84e5-ddbf75dc6de4")
-    stop_watering = CharacteristicIntKeys("98bda121-0b0e-421a-84e5-ddbf75dc6de4")
+    start_watering = CharacteristicStartStopWatering(
+        "98bda120-0b0e-421a-84e5-ddbf75dc6de4"
+    )
+    stop_watering = CharacteristicStartStopWatering(
+        "98bda121-0b0e-421a-84e5-ddbf75dc6de4"
+    )
 
 
 class DeviceConfiguration(Service):
