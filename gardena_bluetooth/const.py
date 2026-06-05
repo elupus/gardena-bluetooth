@@ -334,6 +334,7 @@ class Pump(Service):
 
 class Spray(Service):
     uuid = "98bd0110-0b0e-421a-84e5-ddbf75dc6de4"
+    products = {ProductType.AQUA_CONTOURS}
     variant = "1"
 
     distance = CharacteristicUInt16("98bd0111-0b0e-421a-84e5-ddbf75dc6de4", variant="1")
