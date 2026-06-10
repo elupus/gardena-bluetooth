@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import IntEnum
 
 import pytest
@@ -10,10 +10,12 @@ from gardena_bluetooth.parse import (
     CharacteristicNullString,
     CharacteristicNullStringUf8,
     CharacteristicSMPData,
+    CharacteristicStartStopWatering,
     CharacteristicString,
     ManufacturerData,
     ProductGroup,
     ProductType,
+    WateringSource,
 )
 
 
@@ -181,3 +183,21 @@ def test_int_enum():
     assert raw == b"\x00"
     data = char.decode(raw)
     assert data is Values.A
+
+
+def test_watering_start():
+    char = CharacteristicStartStopWatering("")
+    value = (WateringSource.MOBILE_APP, timedelta(minutes=60))
+    raw = char.encode(value)
+    assert raw == b"0='10',1='3600'"
+    data = char.decode(raw)
+    assert data == value
+
+
+def test_watering_stop():
+    char = CharacteristicStartStopWatering("")
+    value = (WateringSource.MOBILE_APP, None)
+    raw = char.encode(value)
+    assert raw == b"0='10'"
+    data = char.decode(raw)
+    assert data == value

@@ -137,6 +137,11 @@ class ActivationReason(EnumOrInt):
     SETUP = 4
 
 
+class WateringSource(EnumOrInt):
+    MOBILE_APP = 10
+    CLOUD = 18
+
+
 @dataclass
 class CharacteristicSMPData:
     res: int
@@ -316,8 +321,29 @@ class CharacteristicIntKeys(Characteristic[dict[int, str]]):
 
     @classmethod
     def encode(cls, value: dict[int, str]) -> bytes:
-        data = ",".join(f"{key}={value!r}" for key, value in value.items())
+        data = ",".join(f"{key}='{value}'" for key, value in value.items())
         return data.encode("ASCII")
+
+
+@dataclass
+class CharacteristicStartStopWatering(
+    Characteristic[tuple[WateringSource | int, timedelta | None]]
+):
+    @classmethod
+    def decode(cls, data: bytes) -> tuple[WateringSource | int, timedelta | None]:
+        value = CharacteristicIntKeys.decode(data)
+        source = WateringSource.enum_or_int(int(value[0]))
+        duration = value.get(1)
+        if duration is not None:
+            duration = timedelta(seconds=int(duration))
+        return source, duration
+
+    @classmethod
+    def encode(cls, value: tuple[WateringSource | int, timedelta | None]) -> bytes:
+        data = {0: str(int(value[0]))}
+        if value[1] is not None:
+            data[1] = str(int(value[1].total_seconds()))
+        return CharacteristicIntKeys.encode(data)
 
 
 @dataclass
