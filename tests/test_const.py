@@ -54,11 +54,6 @@ def test_id_uniqueness():
 def test_standard_battery_service_covers_water_control_family(
     product_type: ProductType,
 ) -> None:
-    """The standard BLE Battery Service (0x180f) is exposed by the AquaContour
-    family AND the newer Valve1/Valve2 family (wc_single, wc_dual, irrigation
-    valve). Without this, HA's gardena_bluetooth integration cannot surface a
-    battery sensor for those devices because services_for_product_type filters
-    by ProductType.
-    """
+    """Battery service resolves for all supported product types."""
     assert product_type in StandardBattery.products
     assert StandardBattery in Service.services_for_product_type(product_type)
