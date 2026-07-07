@@ -6,7 +6,6 @@ from collections.abc import AsyncGenerator
 
 from bleak import AdvertisementData, BaseBleakScanner, BleakScanner, BLEDevice
 
-from .const import ScanService
 from .parse import ManufacturerData
 
 LOGGER = logging.getLogger(__name__)
@@ -23,11 +22,7 @@ class ScanResult:
 
 
 @contextlib.asynccontextmanager
-async def advertisement_queue(
-    backend: type[BaseBleakScanner] | None = None,
-    *,
-    filter_service_uuid: bool = True,
-):
+async def advertisement_queue(backend: type[BaseBleakScanner] | None = None):
     """
     Context manager for BleakScanner
 
@@ -38,11 +33,6 @@ async def advertisement_queue(
     We can't use the async iterator of the scanner, since some
     implementations (like the one in home assistant) does not
     support it. See https://github.com/Bluetooth-Devices/habluetooth/issues/380
-
-    With ``filter_service_uuid=False`` the OS-level service UUID filter is
-    dropped: some devices (e.g. the G-1903x Smart Water Control family) only
-    expose the scan service in passive scans, while active scans carry just
-    manufacturer data.
     """
 
     queue = asyncio.Queue[tuple[BLEDevice, AdvertisementData]]()
@@ -50,12 +40,7 @@ async def advertisement_queue(
     def _callback(device, advertisement):
         queue.put_nowait((device, advertisement))
 
-    if filter_service_uuid:
-        scanner = BleakScanner(
-            backend=backend, service_uuids=[ScanService], detection_callback=_callback
-        )
-    else:
-        scanner = BleakScanner(backend=backend, detection_callback=_callback)
+    scanner = BleakScanner(backend=backend, detection_callback=_callback)
 
     await scanner.start()
     try:
@@ -66,25 +51,15 @@ async def advertisement_queue(
 
 async def async_scan_devices(
     backend: type[BaseBleakScanner] | None = None,
-    *,
-    filter_service_uuid: bool = True,
 ) -> AsyncGenerator[ScanResult]:
     devices: dict[str, ScanResult] = {}
     """Async iterator that accumulate manufacturer data of devices."""
 
-    async with advertisement_queue(
-        backend, filter_service_uuid=filter_service_uuid
-    ) as queue:
+    async with advertisement_queue(backend) as queue:
         while True:
             device, advertisement = await queue.get()
-            if filter_service_uuid:
-                if ScanService not in advertisement.service_uuids:
-                    continue
-            elif (
-                ScanService not in advertisement.service_uuids
-                and ManufacturerData.company not in advertisement.manufacturer_data
-            ):
-                # Accept either the scan-service-uuid or manufacturer data.
+
+            if ManufacturerData.company not in advertisement.manufacturer_data:
                 continue
 
             data = devices.get(device.address)
@@ -106,14 +81,8 @@ async def async_get_devices(
     fields: set[str] = DEFAULT_MANUFACTURER_DATA_PRODUCT_TYPE_FIELDS,
     timeout: float | None = DEFAULT_MANUFACTURER_DATA_TIMEOUT,
     backend: type[BaseBleakScanner] | None = None,
-    filter_service_uuid: bool = False,
 ) -> dict[str, ScanResult]:
-    """Wait for enough packets of manufacturer data to get select fields, or timeout.
-
-    The addresses are explicitly requested, so the service UUID filter is
-    relaxed by default: devices that only carry manufacturer data in active
-    scans (G-1903x family) are still matched.
-    """
+    """Wait for enough packets of manufacturer data to get select fields, or timeout."""
     devices: dict[str, ScanResult] = {}
     done: set[str] = set()
 
@@ -122,9 +91,7 @@ async def async_get_devices(
 
     try:
         async with asyncio.timeout(timeout):
-            async for result in async_scan_devices(
-                backend, filter_service_uuid=filter_service_uuid
-            ):
+            async for result in async_scan_devices(backend):
                 if result.ble_device.address not in addresses:
                     continue
 
@@ -157,14 +124,9 @@ async def async_get_manufacturer_data(
     fields: set[str] = DEFAULT_MANUFACTURER_DATA_PRODUCT_TYPE_FIELDS,
     timeout: float = DEFAULT_MANUFACTURER_DATA_TIMEOUT,
     backend: type[BaseBleakScanner] | None = None,
-    filter_service_uuid: bool = False,
 ) -> dict[str, ManufacturerData]:
     devices = await async_get_devices(
-        addresses,
-        fields=fields,
-        timeout=timeout,
-        backend=backend,
-        filter_service_uuid=filter_service_uuid,
+        addresses, fields=fields, timeout=timeout, backend=backend
     )
     return {
         address: scan_result.manufacturer_data

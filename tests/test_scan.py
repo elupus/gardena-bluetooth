@@ -31,11 +31,8 @@ def _advertisement(
 
 
 def _mock_scanner(advertisements):
-    """BleakScanner stand-in that replays advertisements into the callback."""
-
     def _factory(*args, detection_callback, **kwargs):
         scanner = MagicMock()
-        _factory.kwargs = kwargs
 
         async def _start():
             for device, advertisement in advertisements:
@@ -45,12 +42,11 @@ def _mock_scanner(advertisements):
         scanner.stop = AsyncMock()
         return scanner
 
-    _factory.kwargs = {}
     return _factory
 
 
-async def _first_address(filter_service_uuid: bool) -> str | None:
-    generator = async_scan_devices(filter_service_uuid=filter_service_uuid)
+async def _first_address() -> str | None:
+    generator = async_scan_devices()
     try:
         async with asyncio.timeout(0.1):
             async for result in generator:
@@ -62,37 +58,24 @@ async def _first_address(filter_service_uuid: bool) -> str | None:
     return None
 
 
-async def test_scan_accepts_service_uuid_advertisement():
-    advertisements = [_advertisement("00:00:00:00:00:01", service_uuids=[ScanService])]
-    scanner_factory = _mock_scanner(advertisements)
-    with patch("gardena_bluetooth.scan.BleakScanner", new=scanner_factory):
-        assert await _first_address(filter_service_uuid=True) == "00:00:00:00:00:01"
-    assert scanner_factory.kwargs["service_uuids"] == [ScanService]
-
-
-async def test_scan_skips_manufacturer_only_advertisement_by_default():
+async def test_scan_accepts_manufacturer_data_advertisement():
     advertisements = [
         _advertisement(
-            "00:00:00:00:00:02",
+            "00:00:00:00:00:01",
             manufacturer_data={
                 ManufacturerData.company: WATER_CONTROL_MANUFACTURER_DATA
             },
         )
     ]
-    with patch("gardena_bluetooth.scan.BleakScanner", new=_mock_scanner(advertisements)):
-        assert await _first_address(filter_service_uuid=True) is None
+    with patch(
+        "gardena_bluetooth.scan.BleakScanner", new=_mock_scanner(advertisements)
+    ):
+        assert await _first_address() == "00:00:00:00:00:01"
 
 
-async def test_scan_accepts_manufacturer_only_advertisement_when_relaxed():
-    advertisements = [
-        _advertisement(
-            "00:00:00:00:00:03",
-            manufacturer_data={
-                ManufacturerData.company: WATER_CONTROL_MANUFACTURER_DATA
-            },
-        )
-    ]
-    scanner_factory = _mock_scanner(advertisements)
-    with patch("gardena_bluetooth.scan.BleakScanner", new=scanner_factory):
-        assert await _first_address(filter_service_uuid=False) == "00:00:00:00:00:03"
-    assert "service_uuids" not in scanner_factory.kwargs
+async def test_scan_skips_advertisement_without_manufacturer_data():
+    advertisements = [_advertisement("00:00:00:00:00:02", service_uuids=[ScanService])]
+    with patch(
+        "gardena_bluetooth.scan.BleakScanner", new=_mock_scanner(advertisements)
+    ):
+        assert await _first_address() is None
