@@ -1,13 +1,13 @@
 import pytest
 
 from gardena_bluetooth.const import (
-    StandardBattery,
     Schedule,
     Schedule_1,
     Schedule_2,
     Schedule_3,
     Schedule_4,
     Schedule_5,
+    StandardBattery,
 )
 from gardena_bluetooth.parse import Characteristic, ProductType, Service
 
