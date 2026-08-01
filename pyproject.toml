@@ -1,6 +1,6 @@
 [project]
 name = "gardena-bluetooth"
-version = "2.8.1"
+dynamic = ["version"]
 description = ""
 readme = "README.rst"
 requires-python = ">=3.12"
@@ -20,15 +20,20 @@ cli = ["asyncclick >=8.1.3.4"]
 
 
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling", "uv-dynamic-versioning"]
+build-backend = "hatchling.build"
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["gardena_bluetooth*"]
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
 
-[tool.setuptools.package-data]
-"gardena_bluetooth" = ["py.typed"]
+[tool.hatch.build.targets.wheel]
+packages = ["gardena_bluetooth"]
+
+[tool.uv-dynamic-versioning]
+vcs = "git"
+style = "pep440"
+bump = true
+pattern = "default-unprefixed"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
