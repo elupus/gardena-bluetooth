@@ -473,12 +473,21 @@ class AquaContourPosition(Service):
     position_name_5 = CharacteristicNullString("98bd013e-0b0e-421a-84e5-ddbf75dc6de4")
 
 
-class AquaContourBattery(Service):
+class StandardBattery(Service):
+    """Standard BLE Battery Service (0x180f)."""
+
     uuid = "0000180f-0000-1000-8000-00805f9b34fb"
-    products = {ProductType.AQUA_CONTOURS}
+    products = {
+        ProductType.AQUA_CONTOURS,
+        ProductType.WATER_COMPUTER,
+        ProductType.VALVE,
+    }
 
     battery_level = CharacteristicInt("00002a19-0000-1000-8000-00805f9b34fb")
     battery_level_status = CharacteristicInt("00002bed-0000-1000-8000-00805f9b34fb")
+
+
+AquaContourBattery = StandardBattery
 
 
 class Reset(Service):

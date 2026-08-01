@@ -7,8 +7,9 @@ from gardena_bluetooth.const import (
     Schedule_3,
     Schedule_4,
     Schedule_5,
+    StandardBattery,
 )
-from gardena_bluetooth.parse import Characteristic, Service
+from gardena_bluetooth.parse import Characteristic, ProductType, Service
 
 
 @pytest.mark.parametrize(
@@ -40,3 +41,19 @@ def test_id_uniqueness():
 
             for char in service.characteristics.values():
                 assert ids.setdefault(char.unique_id, char) is char
+
+
+@pytest.mark.parametrize(
+    "product_type",
+    [
+        ProductType.AQUA_CONTOURS,
+        ProductType.WATER_COMPUTER,
+        ProductType.VALVE,
+    ],
+)
+def test_standard_battery_service_covers_water_control_family(
+    product_type: ProductType,
+) -> None:
+    """Battery service resolves for all supported product types."""
+    assert product_type in StandardBattery.products
+    assert StandardBattery in Service.services_for_product_type(product_type)
