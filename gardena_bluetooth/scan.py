@@ -6,7 +6,6 @@ from collections.abc import AsyncGenerator
 
 from bleak import AdvertisementData, BaseBleakScanner, BleakScanner, BLEDevice
 
-from .const import ScanService
 from .parse import ManufacturerData
 
 LOGGER = logging.getLogger(__name__)
@@ -41,9 +40,7 @@ async def advertisement_queue(backend: type[BaseBleakScanner] | None = None):
     def _callback(device, advertisement):
         queue.put_nowait((device, advertisement))
 
-    scanner = BleakScanner(
-        backend=backend, service_uuids=[ScanService], detection_callback=_callback
-    )
+    scanner = BleakScanner(backend=backend, detection_callback=_callback)
 
     await scanner.start()
     try:
@@ -61,7 +58,8 @@ async def async_scan_devices(
     async with advertisement_queue(backend) as queue:
         while True:
             device, advertisement = await queue.get()
-            if ScanService not in advertisement.service_uuids:
+
+            if ManufacturerData.company not in advertisement.manufacturer_data:
                 continue
 
             data = devices.get(device.address)
