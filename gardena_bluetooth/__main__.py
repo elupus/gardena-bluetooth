@@ -9,7 +9,7 @@ from bleak import (
 from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak.uuids import uuidstr_to_str
 
-from .parse import Characteristic, CharacteristicBytes, Service
+from .parse import Characteristic, CharacteristicBytes, ManufacturerData, Service
 from .scan import async_get_devices, async_scan_devices
 
 IGNORED_NOTIFY_UUIDS = {
@@ -154,6 +154,15 @@ async def monitor(address: str):
 
         while True:
             await asyncio.sleep(1)
+
+
+@main.command()
+@click.argument("manufacturer_data")
+async def parse(manufacturer_data: str):
+    data = ManufacturerData()
+    data.update(bytes.fromhex(manufacturer_data))
+    click.echo(data)
+    click.echo(data.product_type)
 
 
 @main.command()
