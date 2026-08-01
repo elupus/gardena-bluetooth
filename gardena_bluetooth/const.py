@@ -11,7 +11,6 @@ from .parse import (
     CharacteristicInt,
     CharacteristicIntArray,
     CharacteristicIntEnum,
-    CharacteristicIntKeys,
     CharacteristicLong,
     CharacteristicLongArray,
     CharacteristicNullString,
@@ -19,6 +18,7 @@ from .parse import (
     CharacteristicPnpId,
     CharacteristicSchedule,
     CharacteristicSMP,
+    CharacteristicStartStopWatering,
     CharacteristicString,
     CharacteristicTime,
     CharacteristicTimeArray,
@@ -72,12 +72,12 @@ class Valve(Service):
 class ValveX(Service, ABC):
     available: ClassVar[CharacteristicBool]
     manual_watering_duration: ClassVar[CharacteristicLong]
-    error = ClassVar[CharacteristicInt]
+    error: ClassVar[CharacteristicInt]
     state: ClassVar[CharacteristicBool]
     remaining_time_open: ClassVar[CharacteristicLong]
     activation_reason: ClassVar[CharacteristicIntEnum]
-    start_watering = ClassVar[CharacteristicString]
-    stop_watering = ClassVar[CharacteristicString]
+    start_watering: ClassVar[CharacteristicStartStopWatering]
+    stop_watering: ClassVar[CharacteristicStartStopWatering]
 
 
 class Valve1(ValveX):
@@ -93,8 +93,12 @@ class Valve1(ValveX):
     activation_reason = CharacteristicIntEnum(
         "98bda011-0b0e-421a-84e5-ddbf75dc6de4", enum=ActivationReason
     )
-    start_watering = CharacteristicIntKeys("98bda020-0b0e-421a-84e5-ddbf75dc6de4")
-    stop_watering = CharacteristicIntKeys("98bda021-0b0e-421a-84e5-ddbf75dc6de4")
+    start_watering = CharacteristicStartStopWatering(
+        "98bda020-0b0e-421a-84e5-ddbf75dc6de4"
+    )
+    stop_watering = CharacteristicStartStopWatering(
+        "98bda021-0b0e-421a-84e5-ddbf75dc6de4"
+    )
 
 
 class Valve2(ValveX):
@@ -110,8 +114,12 @@ class Valve2(ValveX):
     activation_reason = CharacteristicIntEnum(
         "98bda111-0b0e-421a-84e5-ddbf75dc6de4", enum=ActivationReason
     )
-    start_watering = CharacteristicIntKeys("98bda120-0b0e-421a-84e5-ddbf75dc6de4")
-    stop_watering = CharacteristicIntKeys("98bda121-0b0e-421a-84e5-ddbf75dc6de4")
+    start_watering = CharacteristicStartStopWatering(
+        "98bda120-0b0e-421a-84e5-ddbf75dc6de4"
+    )
+    stop_watering = CharacteristicStartStopWatering(
+        "98bda121-0b0e-421a-84e5-ddbf75dc6de4"
+    )
 
 
 class DeviceConfiguration(Service):
@@ -334,6 +342,7 @@ class Pump(Service):
 
 class Spray(Service):
     uuid = "98bd0110-0b0e-421a-84e5-ddbf75dc6de4"
+    products = {ProductType.AQUA_CONTOURS}
     variant = "1"
 
     distance = CharacteristicUInt16("98bd0111-0b0e-421a-84e5-ddbf75dc6de4", variant="1")
