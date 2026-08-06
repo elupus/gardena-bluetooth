@@ -6,10 +6,11 @@ from bleak import (
     BleakClient,
     BleakError,
 )
-from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak.uuids import uuidstr_to_str
 
-from .parse import Characteristic, CharacteristicBytes, ManufacturerData, Service
+from .client import CachedConnection, Client
+from .exceptions import CharacteristicNoAccess, GardenaBluetoothException
+from .parse import Characteristic, CharacteristicSegmented, ManufacturerData, Service
 from .scan import async_get_devices, async_scan_devices
 
 IGNORED_NOTIFY_UUIDS = {
@@ -67,7 +68,8 @@ async def connect(address: str):
             for char in service.characteristics:
                 char_parser = None
                 if service_parser:
-                    char_parser = service_parser.characteristics.get(char.uuid)
+                    chars = service_parser.find_characteristics(char.uuid)
+                    char_parser = chars[0] if chars else None
 
                 click.echo(
                     f" -  {char.uuid}: {char_parser.name if char_parser else char.description}"
@@ -96,64 +98,43 @@ async def monitor(address: str):
     device = devices[address]
     product_type = device.manufacturer_data.product_type
 
-    def _char_callback(
-        service_name: str,
-        char_parser: Characteristic,
-        gatt_char: BleakGATTCharacteristic,
-        data: bytes,
-    ):
-        try:
-            value = char_parser.decode(data)
-        except ValueError:
-            click.echo(
-                "%s.%s failed to decode %s with char parser %s",
-                service_name,
-                char_parser.name,
-                data,
-                char_parser,
-                err=True,
-            )
-        click.echo(f"{service_name}.{char_parser.name}: {value!r}")
+    click.echo(f"Advertised data: {device.manufacturer_data}")
+    click.echo(f"Product type: {product_type}")
 
-    async def _char_read(
-        client: BleakClient,
-        gatt_char: BleakGATTCharacteristic,
-        char_parser: Characteristic,
-        service_name: str,
-    ):
-        try:
-            data = await client.read_gatt_char(char.uuid)
-        except BleakError as exc:
-            click.echo(
-                f"{service_name}.{char_parser.name}: Failed - {repr(exc)}",
-                err=True,
-            )
-            return
-        _char_callback(service_name, char_parser, gatt_char, data)
+    def _callback(char: Characteristic, value):
+        click.echo(f"{char.name}: {value!r}")
 
-    click.echo(f"Connecting: {address}")
-    async with BleakClient(device.ble_device, timeout=20) as client:
-        for service in client.services:
-            service_parser = Service.find_service(service.uuid, product_type)
-            service_name = service_parser.__name__ if service_parser else service.uuid
+    # monitor runs for the life of the process, unlike Client's usual
+    # short-lived operations, so keep the connection open far longer than
+    # the default idle-disconnect delay.
+    connection = CachedConnection(3600 * 24, lambda: device.ble_device)
+    client = Client(connection, product_type)
 
-            for char in service.characteristics:
-                char_parser = None
-                if service_parser:
-                    char_parser = service_parser.characteristics.get(char.uuid)
-                if char_parser is None:
-                    char_parser = CharacteristicBytes(char.uuid, name=char.uuid)
+    try:
+        click.echo(f"Connecting: {address}")
+        characteristics = await client.get_all_characteristics()
+        for char in characteristics.values():
+            try:
+                value = await client.read_char(char)
+            except GardenaBluetoothException as exc:
+                click.echo(f"{char.name}: Failed to read - {repr(exc)}", err=True)
+            else:
+                click.echo(f"{char.name}: {value!r}")
 
-                if "read" in char.properties:
-                    await _char_read(client, char, char_parser, service_name)
+            if isinstance(char, CharacteristicSegmented):
+                continue
 
-                if "notify" in char.properties:
-                    await client.start_notify(
-                        char, partial(_char_callback, service_name, char_parser)
-                    )
+            try:
+                await client.subscribe_char(char, partial(_callback, char))
+            except CharacteristicNoAccess:
+                pass
+            except GardenaBluetoothException as exc:
+                click.echo(f"{char.name}: Failed to subscribe - {repr(exc)}", err=True)
 
         while True:
             await asyncio.sleep(1)
+    finally:
+        await client.disconnect()
 
 
 @main.command()
