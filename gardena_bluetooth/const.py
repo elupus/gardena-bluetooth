@@ -4,6 +4,7 @@ from typing import ClassVar
 
 from .parse import (
     ActivationReason,
+    CharacteristicBatteryLevelStatus,
     CharacteristicBool,
     CharacteristicBytes,
     CharacteristicErrorData,
@@ -484,7 +485,9 @@ class StandardBattery(Service):
     }
 
     battery_level = CharacteristicInt("00002a19-0000-1000-8000-00805f9b34fb")
-    battery_level_status = CharacteristicInt("00002bed-0000-1000-8000-00805f9b34fb")
+    battery_level_status = CharacteristicBatteryLevelStatus(
+        "00002bed-0000-1000-8000-00805f9b34fb"
+    )
 
 
 AquaContourBattery = StandardBattery

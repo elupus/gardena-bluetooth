@@ -4,6 +4,13 @@ from enum import IntEnum
 import pytest
 
 from gardena_bluetooth.parse import (
+    BatteryChargeLevel,
+    BatteryChargeState,
+    BatteryChargingFaultReason,
+    BatteryChargingType,
+    BatteryServiceRequired,
+    CharacteristicBatteryLevelStatus,
+    CharacteristicBatteryLevelStatusData,
     CharacteristicErrorData,
     CharacteristicIntEnum,
     CharacteristicIntKeys,
@@ -13,6 +20,7 @@ from gardena_bluetooth.parse import (
     CharacteristicStartStopWatering,
     CharacteristicString,
     ManufacturerData,
+    PowerSourceConnected,
     ProductGroup,
     ProductType,
     WateringSource,
@@ -190,6 +198,46 @@ def test_watering_start():
     value = (WateringSource.MOBILE_APP, timedelta(minutes=60))
     raw = char.encode(value)
     assert raw == b"0='10',1='3600'"
+    data = char.decode(raw)
+    assert data == value
+
+
+def test_battery_level_status_full():
+    char = CharacteristicBatteryLevelStatus("")
+    value = CharacteristicBatteryLevelStatusData(
+        battery_present=True,
+        wired_external_power_source_connected=PowerSourceConnected.CONNECTED,
+        wireless_external_power_source_connected=PowerSourceConnected.NOT_CONNECTED,
+        battery_charge_state=BatteryChargeState.CHARGING,
+        battery_charge_level=BatteryChargeLevel.GOOD,
+        battery_charging_type=BatteryChargingType.CONSTANT_CURRENT,
+        battery_charging_fault_reason=BatteryChargingFaultReason.NONE,
+        identifier=42,
+        battery_level=77,
+        service_required=BatteryServiceRequired.NOT_REQUIRED,
+        battery_fault=False,
+    )
+    raw = char.encode(value)
+    assert raw == b"\x07\xa3\x02\x2a\x00\x4d\x00"
+    data = char.decode(raw)
+    assert data == value
+
+
+def test_battery_level_status_minimal_with_fault_flags():
+    char = CharacteristicBatteryLevelStatus("")
+    value = CharacteristicBatteryLevelStatusData(
+        battery_present=False,
+        wired_external_power_source_connected=PowerSourceConnected.UNKNOWN,
+        wireless_external_power_source_connected=PowerSourceConnected.UNKNOWN,
+        battery_charge_state=BatteryChargeState.UNKNOWN,
+        battery_charge_level=BatteryChargeLevel.UNKNOWN,
+        battery_charging_type=BatteryChargingType.UNKNOWN,
+        battery_charging_fault_reason=(
+            BatteryChargingFaultReason.BATTERY | BatteryChargingFaultReason.OTHER
+        ),
+    )
+    raw = char.encode(value)
+    assert raw == b"\x00\x14\x50"
     data = char.decode(raw)
     assert data == value
 
