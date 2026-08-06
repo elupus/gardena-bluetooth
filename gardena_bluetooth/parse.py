@@ -2,7 +2,7 @@ from abc import ABC
 from calendar import Day
 from dataclasses import dataclass, field
 from datetime import datetime, time, timedelta, timezone
-from enum import Enum, IntEnum, auto
+from enum import Enum, IntEnum, IntFlag, auto
 from typing import ClassVar, Generic, Self, TypeVar
 
 CharacteristicType = TypeVar("CharacteristicType")
@@ -611,6 +611,150 @@ class CharacteristicErrorData[T: IntEnum](Characteristic[ErrorData[T]]):
             ),
             *value.error_code.to_bytes(1, "little", signed=True),
         ]
+
+
+class PowerSourceConnected(EnumOrInt):
+    NOT_CONNECTED = 0
+    CONNECTED = 1
+    UNKNOWN = 2
+
+
+class BatteryChargeState(EnumOrInt):
+    UNKNOWN = 0
+    CHARGING = 1
+    DISCHARGING_ACTIVE = 2
+    DISCHARGING_INACTIVE = 3
+
+
+class BatteryChargeLevel(EnumOrInt):
+    UNKNOWN = 0
+    GOOD = 1
+    LOW = 2
+    CRITICAL = 3
+
+
+class BatteryChargingType(EnumOrInt):
+    UNKNOWN = 0
+    CONSTANT_CURRENT = 1
+    CONSTANT_VOLTAGE = 2
+    TRICKLE = 3
+    FLOAT = 4
+
+
+class BatteryChargingFaultReason(IntFlag):
+    NONE = 0
+    BATTERY = 1 << 0
+    EXTERNAL_POWER_SOURCE = 1 << 1
+    OTHER = 1 << 2
+
+
+class BatteryServiceRequired(EnumOrInt):
+    NOT_REQUIRED = 0
+    REQUIRED = 1
+    UNKNOWN = 2
+
+
+@dataclass
+class CharacteristicBatteryLevelStatusData:
+    battery_present: bool
+    wired_external_power_source_connected: PowerSourceConnected | int
+    wireless_external_power_source_connected: PowerSourceConnected | int
+    battery_charge_state: BatteryChargeState | int
+    battery_charge_level: BatteryChargeLevel | int
+    battery_charging_type: BatteryChargingType | int
+    battery_charging_fault_reason: BatteryChargingFaultReason
+    identifier: int | None = None
+    battery_level: int | None = None
+    service_required: BatteryServiceRequired | int | None = None
+    battery_fault: bool | None = None
+
+
+@dataclass
+class CharacteristicBatteryLevelStatus(
+    Characteristic[CharacteristicBatteryLevelStatusData]
+):
+    @classmethod
+    def decode(cls, data: bytes) -> CharacteristicBatteryLevelStatusData:
+        flags = data[0]
+        power_state = int.from_bytes(data[1:3], "little", signed=False)
+        offset = 3
+
+        identifier = None
+        if flags & 0x01:
+            identifier = int.from_bytes(
+                data[offset : offset + 2], "little", signed=False
+            )
+            offset += 2
+
+        battery_level = None
+        if flags & 0x02:
+            battery_level = data[offset]
+            offset += 1
+
+        service_required = None
+        battery_fault = None
+        if flags & 0x04:
+            additional_status = data[offset]
+            service_required = BatteryServiceRequired.enum_or_int(
+                additional_status & 0x03
+            )
+            battery_fault = bool((additional_status >> 2) & 0x01)
+            offset += 1
+
+        return CharacteristicBatteryLevelStatusData(
+            battery_present=bool(power_state & 0x01),
+            wired_external_power_source_connected=PowerSourceConnected.enum_or_int(
+                (power_state >> 1) & 0x03
+            ),
+            wireless_external_power_source_connected=PowerSourceConnected.enum_or_int(
+                (power_state >> 3) & 0x03
+            ),
+            battery_charge_state=BatteryChargeState.enum_or_int(
+                (power_state >> 5) & 0x03
+            ),
+            battery_charge_level=BatteryChargeLevel.enum_or_int(
+                (power_state >> 7) & 0x03
+            ),
+            battery_charging_type=BatteryChargingType.enum_or_int(
+                (power_state >> 9) & 0x07
+            ),
+            battery_charging_fault_reason=BatteryChargingFaultReason(
+                (power_state >> 12) & 0x07
+            ),
+            identifier=identifier,
+            battery_level=battery_level,
+            service_required=service_required,
+            battery_fault=battery_fault,
+        )
+
+    @classmethod
+    def encode(cls, value: CharacteristicBatteryLevelStatusData) -> bytes:
+        power_state = (
+            (int(value.battery_present) & 0x01)
+            | ((int(value.wired_external_power_source_connected) & 0x03) << 1)
+            | ((int(value.wireless_external_power_source_connected) & 0x03) << 3)
+            | ((int(value.battery_charge_state) & 0x03) << 5)
+            | ((int(value.battery_charge_level) & 0x03) << 7)
+            | ((int(value.battery_charging_type) & 0x07) << 9)
+            | ((int(value.battery_charging_fault_reason) & 0x07) << 12)
+        )
+
+        flags = 0
+        tail = b""
+        if value.identifier is not None:
+            flags |= 0x01
+            tail += value.identifier.to_bytes(2, "little", signed=False)
+        if value.battery_level is not None:
+            flags |= 0x02
+            tail += bytes([value.battery_level])
+        if value.service_required is not None or value.battery_fault is not None:
+            flags |= 0x04
+            additional_status = (int(value.service_required or 0) & 0x03) | (
+                (int(bool(value.battery_fault)) & 0x01) << 2
+            )
+            tail += bytes([additional_status])
+
+        return bytes([flags]) + power_state.to_bytes(2, "little", signed=False) + tail
 
 
 @dataclass

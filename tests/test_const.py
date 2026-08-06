@@ -32,6 +32,13 @@ def test_schedule(schedule: type[Schedule], base: str):
     assert schedule.sensor_link.uuid == f"98bd0c{base}6-0b0e-421a-84e5-ddbf75dc6de4"
 
 
+def test_standard_battery_level_status_uuid():
+    assert (
+        StandardBattery.battery_level_status.uuid
+        == "00002bed-0000-1000-8000-00805f9b34fb"
+    )
+
+
 def test_id_uniqueness():
     """Ensure our id's are globally unique for services and characteristics."""
     ids: dict[str, Service | Characteristic] = {}
