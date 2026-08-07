@@ -7,8 +7,10 @@ from .parse import (
     CharacteristicBatteryLevelStatus,
     CharacteristicBool,
     CharacteristicBytes,
+    CharacteristicContourPoints,
     CharacteristicErrorData,
     CharacteristicEventHistory,
+    CharacteristicIgnore,
     CharacteristicInt,
     CharacteristicIntArray,
     CharacteristicIntEnum,
@@ -144,10 +146,10 @@ class AquaContourContours(Service):
     products = {ProductType.AQUA_CONTOURS}
     variant = "1"
 
-    contour_receive = CharacteristicBytes(
+    contour_receive = CharacteristicIgnore(
         "98bd0b11-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
-    contour_transmit = CharacteristicBytes(
+    contour_transmit = CharacteristicIgnore(
         "98bd0b12-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
     contour_info = CharacteristicUInt16PairArray(
@@ -169,6 +171,37 @@ class AquaContourContours(Service):
     )
     contour_name_5 = CharacteristicNullString(
         "98bd0b1e-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
+
+    contour_points_1 = CharacteristicContourPoints(
+        "98bd0b12-0b0e-421a-84e5-ddbf75dc6de4",
+        variant="1",
+        write_uuid="98bd0b11-0b0e-421a-84e5-ddbf75dc6de4",
+        query_index=1,
+    )
+    contour_points_2 = CharacteristicContourPoints(
+        "98bd0b12-0b0e-421a-84e5-ddbf75dc6de4",
+        variant="1",
+        write_uuid="98bd0b11-0b0e-421a-84e5-ddbf75dc6de4",
+        query_index=2,
+    )
+    contour_points_3 = CharacteristicContourPoints(
+        "98bd0b12-0b0e-421a-84e5-ddbf75dc6de4",
+        variant="1",
+        write_uuid="98bd0b11-0b0e-421a-84e5-ddbf75dc6de4",
+        query_index=3,
+    )
+    contour_points_4 = CharacteristicContourPoints(
+        "98bd0b12-0b0e-421a-84e5-ddbf75dc6de4",
+        variant="1",
+        write_uuid="98bd0b11-0b0e-421a-84e5-ddbf75dc6de4",
+        query_index=4,
+    )
+    contour_points_5 = CharacteristicContourPoints(
+        "98bd0b12-0b0e-421a-84e5-ddbf75dc6de4",
+        variant="1",
+        write_uuid="98bd0b11-0b0e-421a-84e5-ddbf75dc6de4",
+        query_index=5,
     )
 
 
