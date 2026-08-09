@@ -1,6 +1,7 @@
 import pytest
 
 from gardena_bluetooth.const import (
+    AquaContourContours,
     Schedule,
     Schedule_1,
     Schedule_2,
@@ -64,3 +65,33 @@ def test_standard_battery_service_covers_water_control_family(
     """Battery service resolves for all supported product types."""
     assert product_type in StandardBattery.products
     assert StandardBattery in Service.services_for_product_type(product_type)
+
+
+def test_contour_points_share_transmit_uuid_but_have_distinct_query_index():
+    points = [
+        AquaContourContours.contour_points_1,
+        AquaContourContours.contour_points_2,
+        AquaContourContours.contour_points_3,
+        AquaContourContours.contour_points_4,
+        AquaContourContours.contour_points_5,
+    ]
+
+    assert all(
+        char.uuid == AquaContourContours.contour_transmit.uuid for char in points
+    )
+    assert all(
+        char.write_uuid == AquaContourContours.contour_receive.uuid for char in points
+    )
+    assert [char.query_index for char in points] == [1, 2, 3, 4, 5]
+    assert len({char.unique_id for char in points}) == len(points)
+
+
+def test_find_characteristics_returns_all_sharing_a_uuid():
+    chars = AquaContourContours.find_characteristics(
+        AquaContourContours.contour_transmit.uuid
+    )
+
+    assert AquaContourContours.contour_transmit in chars
+    assert AquaContourContours.contour_points_1 in chars
+    assert AquaContourContours.contour_points_5 in chars
+    assert len(chars) == 6

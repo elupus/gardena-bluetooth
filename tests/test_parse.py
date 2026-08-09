@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta
 from enum import IntEnum
 
@@ -11,7 +12,9 @@ from gardena_bluetooth.parse import (
     BatteryServiceRequired,
     CharacteristicBatteryLevelStatus,
     CharacteristicBatteryLevelStatusData,
+    CharacteristicContourPoints,
     CharacteristicErrorData,
+    CharacteristicIgnore,
     CharacteristicIntEnum,
     CharacteristicIntKeys,
     CharacteristicNullString,
@@ -19,10 +22,16 @@ from gardena_bluetooth.parse import (
     CharacteristicSMPData,
     CharacteristicStartStopWatering,
     CharacteristicString,
+    ContourPoint,
     ManufacturerData,
     PowerSourceConnected,
     ProductGroup,
     ProductType,
+    Segment,
+    SegmentAck,
+    SegmentAssembler,
+    SegmentCommand,
+    SegmentQuery,
     WateringSource,
 )
 
@@ -249,3 +258,137 @@ def test_watering_stop():
     assert raw == b"0='10'"
     data = char.decode(raw)
     assert data == value
+
+
+def test_segment_decode_extracts_header_and_payload():
+    data = bytes([0x02, 1, 45, 45] + [0] * 14)
+    frame = Segment.decode(data)
+    assert frame.cmd == SegmentCommand.FIRST
+    assert frame.index == 2
+    assert frame.frames_left == 1
+    assert frame.payload == bytes([45, 45] + [0] * 14)
+
+
+def test_segment_decode_unknown_command_falls_back_to_int():
+    data = bytes([(7 << 5) | 1, 0])
+    frame = Segment.decode(data)
+    assert frame.cmd == 7
+    assert frame.index == 1
+
+
+def test_characteristic_contour_points_decode_skips_padding():
+    char = CharacteristicContourPoints("rx", write_uuid="tx", query_index=2)
+    data = bytes([45, 45] + [0] * 14)
+    assert char.query_index == 2
+    assert char.decode(data) == [ContourPoint(90, 450)]
+
+
+def test_characteristic_contour_points_decode_multiple_pairs():
+    char = CharacteristicContourPoints("rx", write_uuid="tx", query_index=0)
+    data = bytes([0, 90, 45, 45])
+    assert char.decode(data) == [ContourPoint(0, 900), ContourPoint(90, 450)]
+
+
+def test_characteristic_contour_points_unique_id_includes_query_index():
+    first = CharacteristicContourPoints(
+        "uuid", variant="1", write_uuid="tx", query_index=0
+    )
+    second = CharacteristicContourPoints(
+        "uuid", variant="1", write_uuid="tx", query_index=1
+    )
+    assert first.unique_id != second.unique_id
+    assert first.unique_id == "uuid:1:segment0"
+
+
+def test_segment_query_encode():
+    assert SegmentQuery(4).encode() == bytes([(3 << 5) | 4])
+
+
+def test_segment_query_decode():
+    assert SegmentQuery.decode(bytes([(3 << 5) | 4])) == SegmentQuery(4)
+
+
+def test_segment_ack_encode():
+    assert SegmentAck(4).encode() == bytes([(2 << 5) | 4])
+
+
+def test_segment_ack_decode():
+    assert SegmentAck.decode(bytes([(2 << 5) | 4])) == SegmentAck(4)
+
+
+def test_characteristic_ignore_decode_returns_none():
+    char = CharacteristicIgnore("uuid")
+    assert char.decode(b"\x01\x02\x03") is None
+
+
+def test_characteristic_ignore_encode_returns_empty_bytes():
+    char = CharacteristicIgnore("uuid")
+    assert char.encode(None) == b""
+
+
+def test_segment_assembler_accumulates_until_last_frame():
+    assembler = SegmentAssembler(index=0)
+    first = Segment(
+        cmd=SegmentCommand.FIRST, index=0, frames_left=2, payload=bytes([45, 45])
+    )
+    last = Segment(
+        cmd=SegmentCommand.NEXT, index=0, frames_left=1, payload=bytes([0, 90])
+    )
+
+    assert assembler.add_frame(first) is False
+    assert assembler.done is False
+
+    assert assembler.add_frame(last) is True
+    assert assembler.done is True
+    char = CharacteristicContourPoints("rx", write_uuid="tx", query_index=0)
+    assert char.decode(assembler.payload) == [
+        ContourPoint(90, 450),
+        ContourPoint(0, 900),
+    ]
+
+
+def test_segment_assembler_ignores_frames_for_other_index():
+    assembler = SegmentAssembler(index=1)
+    frame = Segment(
+        cmd=SegmentCommand.FIRST, index=2, frames_left=1, payload=bytes([0, 10])
+    )
+
+    assert assembler.add_frame(frame) is False
+    assert assembler.payload == b""
+
+
+def test_segment_assembler_aborts_and_discards_payload_on_ordering_violation(caplog):
+    assembler = SegmentAssembler(index=0)
+    first = Segment(
+        cmd=SegmentCommand.FIRST, index=0, frames_left=2, payload=bytes([45, 45])
+    )
+    assert assembler.add_frame(first) is False
+    assert assembler.done is False
+
+    unexpected = Segment(
+        cmd=SegmentCommand.FIRST, index=0, frames_left=1, payload=bytes([0, 90])
+    )
+    with caplog.at_level(logging.WARNING, logger="gardena_bluetooth.parse"):
+        assert assembler.add_frame(unexpected) is True
+
+    assert assembler.done is True
+    assert assembler.payload == b""
+    assert "Unexpected command" in caplog.text
+
+
+def test_segment_assembler_rejects_frames_after_done(caplog):
+    assembler = SegmentAssembler(index=0)
+    first = Segment(
+        cmd=SegmentCommand.FIRST, index=0, frames_left=1, payload=bytes([45, 45])
+    )
+    assert assembler.add_frame(first) is True
+    assert assembler.done is True
+
+    extra = Segment(
+        cmd=SegmentCommand.NEXT, index=0, frames_left=0, payload=bytes([0, 90])
+    )
+    with caplog.at_level(logging.DEBUG, logger="gardena_bluetooth.parse"):
+        assert assembler.add_frame(extra) is True
+
+    assert assembler.payload == bytes([45, 45])
+    assert "already complete" in caplog.text

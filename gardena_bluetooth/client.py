@@ -18,9 +18,15 @@ from .exceptions import (
 )
 from .parse import (
     Characteristic,
+    CharacteristicIgnore,
+    CharacteristicSegmented,
     CharacteristicTime,
     CharacteristicType,
     ProductType,
+    Segment,
+    SegmentAck,
+    SegmentAssembler,
+    SegmentQuery,
     Service,
 )
 
@@ -204,8 +210,15 @@ class Client:
                 return default
             raise CharacteristicNotFound
 
+        if isinstance(char, CharacteristicIgnore):
+            return None
+
         try:
-            return char.decode(await self.read_char_raw(char.uuid))
+            if isinstance(char, CharacteristicSegmented):
+                data = await self.read_raw_segmented(char, char.query_index)
+            else:
+                data = await self.read_char_raw(char.uuid)
+            return char.decode(data)
         except CharacteristicNotFound:
             if default is not DEFAULT_MISSING:
                 return default
@@ -246,6 +259,9 @@ class Client:
         if char.unique_id not in self._unique_id:
             raise CharacteristicNotFound
 
+        if isinstance(char, CharacteristicIgnore):
+            return None
+
         data = char.encode(value)
         await self.write_char_raw(char.uuid, data, response)
 
@@ -253,12 +269,17 @@ class Client:
         self, uuid: str, callback: Callable[[BleakGATTCharacteristic, bytes], None]
     ) -> Callable[[], Awaitable[None]]:
         async with self._client() as client:
-            """Write data to a characteristic."""
+            """Subscribe to a characteristic."""
             characteristic = client.services.get_characteristic(uuid)
             if characteristic is None:
                 raise CharacteristicNotFound(f"Unable to find characteristic {uuid}")
 
-            client.start_notify(characteristic, callback)
+            if "notify" not in characteristic.properties:
+                raise CharacteristicNoAccess(
+                    f"Characteristic {uuid} is not subscribable"
+                )
+
+            await client.start_notify(characteristic, callback)
 
             async def _cleanup():
                 await client.stop_notify(characteristic)
@@ -290,7 +311,45 @@ class Client:
             LOGGER.debug("Got notification for %s with value %s", char.name, value)
             callback(value)
 
-        return self.subscribe_char_raw(char.uuid, _callback)
+        if isinstance(char, CharacteristicIgnore):
+            raise CharacteristicNoAccess(f"Characteristic {char.uuid} is ignored")
+
+        return await self.subscribe_char_raw(char.uuid, _callback)
+
+    async def read_raw_segmented(
+        self,
+        char: CharacteristicSegmented,
+        index: int,
+        timeout: float = 10.0,
+    ) -> bytes:
+        """Read a resource transferred via a multi-frame segmented protocol."""
+        if char.unique_id not in self._unique_id:
+            raise CharacteristicNotFound
+
+        assembler = SegmentAssembler(index)
+        done = asyncio.Event()
+
+        def _on_notify(_: BleakGATTCharacteristic, data: bytes):
+            segment = Segment.decode(data)
+            LOGGER.debug("Got segment for %s: %s", char.name, segment)
+            if assembler.add_frame(segment):
+                done.set()
+
+        unsubscribe = await self.subscribe_char_raw(char.uuid, _on_notify)
+        try:
+            await self.write_char_raw(char.write_uuid, SegmentQuery(index).encode())
+            try:
+                await asyncio.wait_for(done.wait(), timeout)
+            except asyncio.TimeoutError as exc:
+                raise CommunicationFailure(
+                    f"Timed out waiting for segmented data at index {index}"
+                ) from exc
+            LOGGER.debug("Acknowledging final segment for %s", char.name)
+            await self.write_char_raw(char.write_uuid, SegmentAck(index).encode())
+        finally:
+            await unsubscribe()
+
+        return assembler.payload
 
     async def update_timestamp(self, char: CharacteristicTime, now: datetime):
         try:
