@@ -19,11 +19,14 @@ from gardena_bluetooth.parse import (
     CharacteristicIntKeys,
     CharacteristicNullString,
     CharacteristicNullStringUf8,
+    CharacteristicPositionContourMask,
     CharacteristicSMPData,
     CharacteristicStartStopWatering,
     CharacteristicString,
+    Contour,
     ContourPoint,
     ManufacturerData,
+    PositionContourMaskEntry,
     PowerSourceConnected,
     ProductGroup,
     ProductType,
@@ -298,6 +301,41 @@ def test_characteristic_contour_points_unique_id_includes_query_index():
     )
     assert first.unique_id != second.unique_id
     assert first.unique_id == "uuid:1:segment0"
+
+
+def test_characteristic_position_contour_mask_decode():
+    char = CharacteristicPositionContourMask("uuid")
+    data = bytes([0b10000101, 0x00, 0x00, 0x00, 0x00])
+    entries = char.decode(data)
+
+    assert entries[0] == PositionContourMaskEntry(
+        position=1,
+        assigned_contours={Contour.CONTOUR_1, Contour.CONTOUR_3},
+        is_segmented_watering=False,
+        is_externally_managed=False,
+        is_automatic_mode=True,
+    )
+    assert [entry.position for entry in entries] == [1, 2, 3, 4, 5]
+
+
+def test_characteristic_position_contour_mask_encode_decode_roundtrip():
+    char = CharacteristicPositionContourMask("uuid")
+    value = [
+        PositionContourMaskEntry(
+            position=i,
+            assigned_contours=set(),
+            is_segmented_watering=False,
+            is_externally_managed=False,
+            is_automatic_mode=False,
+        )
+        for i in range(1, 6)
+    ]
+    value[0].assigned_contours = {Contour.CONTOUR_2, Contour.CONTOUR_5}
+    value[0].is_externally_managed = True
+    value[2].is_segmented_watering = True
+
+    encoded = char.encode(value)
+    assert char.decode(encoded) == value
 
 
 def test_segment_query_encode():

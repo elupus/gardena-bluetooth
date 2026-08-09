@@ -514,6 +514,50 @@ class CharacteristicContours(Characteristic[set[Contour]]):
         return int_value.to_bytes(1, "little", signed=False)
 
 
+@dataclass
+class PositionContourMaskEntry:
+    position: int
+    """1-indexed position (1-5)."""
+    assigned_contours: set[Contour]
+    """Contours available to this position - a position can have several."""
+    is_segmented_watering: bool
+    is_externally_managed: bool
+    is_automatic_mode: bool
+
+
+PositionContourMask = list[PositionContourMaskEntry]
+"""One entry per position, in position order (1-5)."""
+
+
+@dataclass
+class CharacteristicPositionContourMask(Characteristic[PositionContourMask]):
+    @classmethod
+    def decode(cls, data: bytes) -> PositionContourMask:
+        return [
+            PositionContourMaskEntry(
+                position=i + 1,
+                assigned_contours={Contour(c) for c in range(5) if b & (1 << c)},
+                is_segmented_watering=bool(b & 0x20),
+                is_externally_managed=bool(b & 0x40),
+                is_automatic_mode=bool(b & 0x80),
+            )
+            for i, b in enumerate(data)
+        ]
+
+    @classmethod
+    def encode(cls, value: PositionContourMask) -> bytes:
+        result = bytearray(5)
+        for entry in value:
+            b = 0
+            for contour in entry.assigned_contours:
+                b |= 1 << int(contour)
+            b |= int(entry.is_segmented_watering) << 5
+            b |= int(entry.is_externally_managed) << 6
+            b |= int(entry.is_automatic_mode) << 7
+            result[entry.position - 1] = b
+        return bytes(result)
+
+
 class SegmentCommand(EnumOrInt):
     FIRST = 0
     NEXT = 1
@@ -656,7 +700,7 @@ class ContourPoint:
     angle: int
     """Angle in degrees (0-359)."""
     distance: int
-    """Distance in mm."""
+    """Distance in cm."""
 
 
 ContourPoints = list[ContourPoint]
