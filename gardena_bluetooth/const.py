@@ -19,6 +19,7 @@ from .parse import (
     CharacteristicNullString,
     CharacteristicNullStringUf8,
     CharacteristicPnpId,
+    CharacteristicPositionContourMask,
     CharacteristicSchedule,
     CharacteristicSMP,
     CharacteristicStartStopWatering,
@@ -428,6 +429,7 @@ class AquaContour(Service):
     )
     frost_warning = CharacteristicBool("98bd0a15-0b0e-421a-84e5-ddbf75dc6de4")
     active_contour = CharacteristicIntArray("98bd0a16-0b0e-421a-84e5-ddbf75dc6de4")
+    """Per position (index 0-4 = position 1-5), the contour currently selected for it."""
     operation_mode = CharacteristicIntEnum(
         "98bd0a17-0b0e-421a-84e5-ddbf75dc6de4", enum=AquaContourOperationMode
     )
@@ -499,7 +501,9 @@ class AquaContourPosition(Service):
     products = {ProductType.AQUA_CONTOURS}
 
     active_position = CharacteristicInt("98bd0132-0b0e-421a-84e5-ddbf75dc6de4")
-    position_contour_mask = CharacteristicBytes("98bd0135-0b0e-421a-84e5-ddbf75dc6de4")
+    position_contour_mask = CharacteristicPositionContourMask(
+        "98bd0135-0b0e-421a-84e5-ddbf75dc6de4"
+    )
     position_name_1 = CharacteristicNullString("98bd013a-0b0e-421a-84e5-ddbf75dc6de4")
     position_name_2 = CharacteristicNullString("98bd013b-0b0e-421a-84e5-ddbf75dc6de4")
     position_name_3 = CharacteristicNullString("98bd013c-0b0e-421a-84e5-ddbf75dc6de4")
