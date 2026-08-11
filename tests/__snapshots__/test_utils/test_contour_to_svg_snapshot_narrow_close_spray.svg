@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-94.5 -94.5 189.0 189.0">
+  <path d="M 0.0,0.0 -77.9,-45.0 -68.9,-57.9 -57.9,-68.9 -45.0,-77.9 -30.8,-84.6 -15.6,-88.6 -0.0,-90.0 0.0,-90.0 15.6,-88.6 30.8,-84.6 45.0,-77.9 57.9,-68.9 68.9,-57.9 77.9,-45.0 Z" fill="#03a9f4" fill-opacity="0.3" stroke="#03a9f4" stroke-width="0.95" stroke-linejoin="round" />
+  <path d="M 0.0,0.0 L -6.3,-89.8 L 6.3,-89.8 Z" fill="#ff9800" fill-opacity="0.3" />
+  <path d="M 0.0,0.0 L -6.3,-89.8 L 6.3,-89.8 Z" fill="#ff9800">
+    <animateTransform attributeName="transform" type="scale" values="0;1" dur="1.2s" repeatCount="indefinite" />
+    <animate attributeName="fill-opacity" values="0;0.9;0" keyTimes="0;0.6;1" dur="1.2s" repeatCount="indefinite" />
+  </path>
+  <circle r="1.89" fill="#ff9800" />
+</svg>
