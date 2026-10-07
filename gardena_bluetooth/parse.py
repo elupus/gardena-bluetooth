@@ -521,8 +521,14 @@ class PositionContourMaskEntry:
     assigned_contours: set[Contour]
     """Contours available to this position - a position can have several."""
     is_segmented_watering: bool
+    """Bit 5, water supplied by an automatic pump rather than a tap or pressure tank.
+
+    The app reads the water supply mode from the first position only.
+    """
     is_externally_managed: bool
+    """Bit 6, irrigation controlled by an external device."""
     is_automatic_mode: bool
+    """Bit 7, position detected automatically, only set on positions with contours."""
 
 
 PositionContourMask = list[PositionContourMaskEntry]
