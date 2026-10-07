@@ -29,6 +29,7 @@ from gardena_bluetooth.parse import (
     CharacteristicString,
     CharacteristicTimeDelta,
     CharacteristicTimeOfDay,
+    CharacteristicWeekdays,
     Contour,
     ContourPoint,
     ManufacturerData,
@@ -479,3 +480,15 @@ def test_event_history_schedule_index(schedule_index: int):
     raw = CharacteristicEventHistoryData.encode(value)
     assert raw[6] == schedule_index
     assert CharacteristicEventHistoryData.decode(raw) == value
+
+
+@pytest.mark.parametrize(
+    ("raw", "days"),
+    [
+        (b"\x15", {Day.MONDAY, Day.WEDNESDAY, Day.FRIDAY}),
+        (b"\x7f", set(Day)),
+        (b"\x81", {Day.MONDAY}),
+    ],
+)
+def test_weekdays_decode(raw: bytes, days: set[Day]):
+    assert CharacteristicWeekdays.decode(raw) == days
