@@ -1,5 +1,5 @@
 from abc import ABC
-from enum import IntEnum
+from enum import IntEnum, IntFlag
 from typing import ClassVar
 
 from .parse import (
@@ -14,6 +14,7 @@ from .parse import (
     CharacteristicInt,
     CharacteristicIntArray,
     CharacteristicIntEnum,
+    CharacteristicIntFlagArray,
     CharacteristicLong,
     CharacteristicLongArray,
     CharacteristicNullString,
@@ -342,14 +343,26 @@ class Sensor(Service):
     force_measurement = CharacteristicInt("98bd0017-0b0e-421a-84e5-ddbf75dc6de4")
 
 
+class WateringHistorySkipReason(IntFlag):
+    NONE = 0
+    SENSOR = 1
+    MANUAL = 2
+    BATTERY = 4
+    WATERING_PAUSE = 8
+    VALVE_DETACHED = 16
+    HARD_FAULT = 32
+    DRY_RUN = 64
+    TEMPERATURE = 128
+
+
 class WateringHistory(Service):
     uuid = "98bd0d10-0b0e-421a-84e5-ddbf75dc6de4"
     products = set(ProductType) - {ProductType.AQUA_CONTOURS}
 
     timestamp_array = CharacteristicTimeArray("98bd0d11-0b0e-421a-84e5-ddbf75dc6de4")
     timestamp_count = CharacteristicInt("98bd0d12-0b0e-421a-84e5-ddbf75dc6de4")
-    skip_reason = CharacteristicIntEnum(
-        "98bd0d13-0b0e-421a-84e5-ddbf75dc6de4", enum=SkipReason
+    skip_reason = CharacteristicIntFlagArray(
+        "98bd0d13-0b0e-421a-84e5-ddbf75dc6de4", flag=WateringHistorySkipReason
     )
     watering_duration = CharacteristicLongArray("98bd0d14-0b0e-421a-84e5-ddbf75dc6de4")
     watering_skipped = CharacteristicBool("98bd0d15-0b0e-421a-84e5-ddbf75dc6de4")
