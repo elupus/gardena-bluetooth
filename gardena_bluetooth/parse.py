@@ -750,11 +750,8 @@ class CharacteristicTimeOfDay(Characteristic[time]):
 
     @classmethod
     def encode(cls, value: time) -> bytes:
-        return (
-            timedelta(hours=value.hour, minutes=value.minute, seconds=value.second)
-            .total_seconds()
-            .to_bytes(4, "little", signed=True)
-        )
+        seconds = value.hour * 3600 + value.minute * 60 + value.second
+        return seconds.to_bytes(4, "little", signed=True)
 
 
 @dataclass
@@ -766,7 +763,7 @@ class CharacteristicTimeDelta(Characteristic[timedelta]):
 
     @classmethod
     def encode(cls, value: timedelta) -> bytes:
-        return value.total_seconds().to_bytes(4, "little", signed=True)
+        return int(value.total_seconds()).to_bytes(4, "little", signed=True)
 
 
 @dataclass
