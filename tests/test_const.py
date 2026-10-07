@@ -7,6 +7,7 @@ from gardena_bluetooth.const import (
     AquaContour,
     AquaContourContours,
     AquaContourManualModeError,
+    AquaContourRainSensitivity,
     AquaContourWatering,
     AquaContourWateringMode,
     HybridValveActivationReason,
@@ -311,3 +312,10 @@ def test_aqua_contour_local_time_adjusted() -> None:
 @pytest.mark.parametrize("error", list(AquaContourManualModeError))
 def test_spray_watering_mode_error(error: AquaContourManualModeError) -> None:
     assert Spray.watering_mode_error.decode(bytes([error.value])) is error
+
+
+@pytest.mark.parametrize("sensitivity", list(AquaContourRainSensitivity))
+def test_aqua_contour_rain_sensitivity(sensitivity: AquaContourRainSensitivity) -> None:
+    char = AquaContourWatering.rain_sensitivity
+    assert char.decode(bytes([sensitivity.value])) is sensitivity
+    assert char.encode(sensitivity) == bytes([sensitivity.value])

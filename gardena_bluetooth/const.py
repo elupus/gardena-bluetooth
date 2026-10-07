@@ -596,6 +596,13 @@ class AquaContourWateringMode(IntEnum):
     CONTOUR_5 = 5
 
 
+class AquaContourRainSensitivity(IntEnum):
+    SENSOR_NOT_USED = 0
+    HIGH_WATER_SAVING = 1
+    MEDIUM_WATER_SAVING = 2
+    LOW_WATER_SAVING = 3
+
+
 class AquaContourWatering(Service):
     uuid = "98bd0d10-0b0e-421a-84e5-ddbf75dc6de4"
     variant = "1"
@@ -630,8 +637,10 @@ class AquaContourWatering(Service):
     seasonal_adjust = CharacteristicInt(
         "98bd0d19-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
-    rain_sensitivity = CharacteristicInt(
-        "98bd0d1a-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    rain_sensitivity = CharacteristicIntEnum(
+        "98bd0d1a-0b0e-421a-84e5-ddbf75dc6de4",
+        variant="1",
+        enum=AquaContourRainSensitivity,
     )
 
 
