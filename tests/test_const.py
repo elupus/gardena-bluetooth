@@ -1,3 +1,4 @@
+from calendar import Day
 from enum import IntEnum
 
 import pytest
@@ -13,6 +14,10 @@ from gardena_bluetooth.const import (
     AquaContourWatering,
     AquaContourWateringMode,
     HybridDeviceConfiguration,
+    HybridSchedule,
+    HybridSchedule_1,
+    HybridSchedule_6,
+    HybridScheduleOffsetFrom,
     HybridValveActivationReason,
     PressureTankErrorCode,
     PressureTankInfoCode,
@@ -378,3 +383,26 @@ def test_hybrid_device_configuration() -> None:
     assert Service.find_service(service.uuid, ProductType.PUMP) is Pump
     assert service.rain_pause.decode((43200).to_bytes(4, "little")) == 43200
     assert service.custom_device_name.decode(b"Garden\x00\x00") == "Garden"
+
+
+@pytest.mark.parametrize(
+    ("schedule", "index"),
+    [(HybridSchedule_1, "0"), (HybridSchedule_6, "5")],
+)
+def test_hybrid_schedule(schedule: type[HybridSchedule], index: str) -> None:
+    def _uuid(offset: str) -> str:
+        return f"98bdd{index}{offset}-0b0e-421a-84e5-ddbf75dc6de4"
+
+    assert schedule.uuid == _uuid("00")
+    assert [char.uuid for char in schedule.characteristics.values()] == [
+        _uuid(offset) for offset in ("01", "02", "03", "04", "06", "07", "08")
+    ]
+    assert Service.find_service(schedule.uuid, ProductType.WATER_COMPUTER) is schedule
+    assert Service.find_service(schedule.uuid, ProductType.AQUA_CONTOURS) is None
+
+
+def test_hybrid_schedule_values() -> None:
+    schedule = HybridSchedule_1
+    assert schedule.end_offset_from.decode(b"\x04") is HybridScheduleOffsetFrom.START
+    assert schedule.weekdays.encode({Day.MONDAY, Day.FRIDAY}) == b"\x11\x00\x00\x00"
+    assert schedule.weekdays.decode(b"\x11\x00\x00\x00") == {Day.MONDAY, Day.FRIDAY}

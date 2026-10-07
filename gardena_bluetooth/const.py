@@ -33,6 +33,7 @@ from .parse import (
     CharacteristicUInt16,
     CharacteristicUInt16PairArray,
     CharacteristicWeekdays,
+    CharacteristicWeekdaysUInt32,
     ProductType,
     Service,
     SkipReason,
@@ -339,6 +340,77 @@ class Schedule_4(Schedule, instance=4):
 
 
 class Schedule_5(Schedule, instance=5):
+    pass
+
+
+class HybridScheduleOffsetFrom(IntEnum):
+    MIDNIGHT = 0
+    START = 4
+    """Relative to the start of the schedule."""
+
+
+class HybridScheduleRepetition(IntEnum):
+    WEEKLY = 0
+
+
+class HybridSchedule(Service, ABC):
+    """A schedule of hybrid water controls, three per valve.
+
+    Start and end are offsets in seconds from a reference point, normally
+    midnight for the start and the start for the end, giving the duration.
+    """
+
+    products = {ProductType.WATER_COMPUTER}
+    start_offset_from: ClassVar[CharacteristicIntEnum]
+    start_offset: ClassVar[CharacteristicTimeDelta]
+    end_offset_from: ClassVar[CharacteristicIntEnum]
+    end_offset: ClassVar[CharacteristicTimeDelta]
+    repetition_type: ClassVar[CharacteristicIntEnum]
+    weekdays: ClassVar[CharacteristicWeekdaysUInt32]
+    actuator: ClassVar[CharacteristicInt]
+
+    def __init_subclass__(cls, *, index: int, **kwargs):
+        def _uuid(offset: int) -> str:
+            return f"98bdd{index:x}{offset:02x}-0b0e-421a-84e5-ddbf75dc6de4"
+
+        cls.uuid = _uuid(0)
+        cls.start_offset_from = CharacteristicIntEnum(
+            _uuid(1), name="Start Offset From", enum=HybridScheduleOffsetFrom
+        )
+        cls.start_offset = CharacteristicTimeDelta(_uuid(2), name="Start Offset")
+        cls.end_offset_from = CharacteristicIntEnum(
+            _uuid(3), name="End Offset From", enum=HybridScheduleOffsetFrom
+        )
+        cls.end_offset = CharacteristicTimeDelta(_uuid(4), name="End Offset")
+        cls.repetition_type = CharacteristicIntEnum(
+            _uuid(6), name="Repetition Type", enum=HybridScheduleRepetition
+        )
+        cls.weekdays = CharacteristicWeekdaysUInt32(_uuid(7), name="Weekdays")
+        cls.actuator = CharacteristicInt(_uuid(8), name="Actuator")
+        super().__init_subclass__(**kwargs)
+
+
+class HybridSchedule_1(HybridSchedule, index=0):
+    pass
+
+
+class HybridSchedule_2(HybridSchedule, index=1):
+    pass
+
+
+class HybridSchedule_3(HybridSchedule, index=2):
+    pass
+
+
+class HybridSchedule_4(HybridSchedule, index=3):
+    pass
+
+
+class HybridSchedule_5(HybridSchedule, index=4):
+    pass
+
+
+class HybridSchedule_6(HybridSchedule, index=5):
     pass
 
 

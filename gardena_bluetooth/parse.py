@@ -492,6 +492,15 @@ class CharacteristicWeekdays(Characteristic[set[Day]]):
         return int_value.to_bytes(1, "little", signed=False)
 
 
+@dataclass
+class CharacteristicWeekdaysUInt32(CharacteristicWeekdays):
+    """Weekdays bitmask stored in four bytes."""
+
+    @classmethod
+    def encode(cls, value: set[Day]) -> bytes:
+        return super().encode(value).ljust(4, b"\x00")
+
+
 class Contour(IntEnum):
     CONTOUR_1 = 0
     CONTOUR_2 = 1
