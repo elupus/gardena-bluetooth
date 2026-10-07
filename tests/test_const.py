@@ -11,6 +11,7 @@ from gardena_bluetooth.const import (
     Schedule_3,
     Schedule_4,
     Schedule_5,
+    Sensor,
     StandardBattery,
     Valve,
     Valve1,
@@ -195,3 +196,11 @@ def test_aqua_contour_watering_pause(raw: bytes, minutes: int) -> None:
 def test_schedule_links(char, raw: bytes, service_id: int) -> None:
     assert char.decode(raw) == service_id
     assert char.encode(service_id) == raw
+
+
+@pytest.mark.parametrize(
+    ("raw", "value"),
+    [(b"\x00" * 10, ""), (b"abc\x00\x00\x00", "abc")],
+)
+def test_sensor_type(raw: bytes, value: str) -> None:
+    assert Sensor.type.decode(raw) == value

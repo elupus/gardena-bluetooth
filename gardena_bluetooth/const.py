@@ -338,7 +338,7 @@ class Sensor(Service):
 
     value = CharacteristicInt("98bd0011-0b0e-421a-84e5-ddbf75dc6de4")
     connected_state = CharacteristicBool("98bd0012-0b0e-421a-84e5-ddbf75dc6de4")
-    type = CharacteristicString("98bd0013-0b0e-421a-84e5-ddbf75dc6de4")
+    type = CharacteristicNullStringUf8("98bd0013-0b0e-421a-84e5-ddbf75dc6de4")
     threshold = CharacteristicInt("98bd0014-0b0e-421a-84e5-ddbf75dc6de4")
     battery_level = CharacteristicInt("98bd0015-0b0e-421a-84e5-ddbf75dc6de4")
     measurement_timestamp = CharacteristicTime("98bd0016-0b0e-421a-84e5-ddbf75dc6de4")
