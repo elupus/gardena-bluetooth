@@ -834,14 +834,14 @@ class CharacteristicErrorData[T: IntEnum](Characteristic[ErrorData[T]]):
 
     @classmethod
     def encode(cls, value: ErrorData[T]) -> bytes:
-        return [
-            *value.index.to_bytes(1, "little", signed=True),
-            *value.total_events.to_bytes(1, "little", signed=True),
-            *int(value.time_stamp.replace(tzinfo=timezone.utc).timestamp()).to_bytes(
-                4, "little", signed=True
-            ),
-            *value.error_code.to_bytes(1, "little", signed=True),
-        ]
+        return (
+            value.index.to_bytes(1, "little")
+            + value.total_events.to_bytes(1, "little")
+            + int(value.time_stamp.replace(tzinfo=timezone.utc).timestamp()).to_bytes(
+                4, "little"
+            )
+            + value.error_code.to_bytes(1, "little")
+        )
 
 
 class PowerSourceConnected(EnumOrInt):
