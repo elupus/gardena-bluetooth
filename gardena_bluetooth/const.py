@@ -471,6 +471,49 @@ class WateringHistory(Service):
     rain_sensitivity = CharacteristicInt("98bd0d1a-0b0e-421a-84e5-ddbf75dc6de4")
 
 
+class HybridWateringHistorySkipReason(IntFlag):
+    NONE = 0
+    SENSOR = 1
+    MANUAL = 2
+    BATTERY = 4
+    WATERING_PAUSE = 8
+    VALVE_DETACHED = 16
+    FROST_RISK = 64
+
+
+class HybridWateringHistory(Service, ABC):
+    """Watering history of one valve of a hybrid water control, 21 events."""
+
+    products = {ProductType.WATER_COMPUTER}
+    timestamp_array: ClassVar[CharacteristicTimeArray]
+    timestamp_count: ClassVar[CharacteristicInt]
+    skip_reason: ClassVar[CharacteristicIntFlagArray]
+    watering_duration: ClassVar[CharacteristicLongArray]
+
+    def __init_subclass__(cls, *, index: int, **kwargs):
+        def _uuid(offset: int) -> str:
+            return f"98bd9{index:x}{offset:02x}-0b0e-421a-84e5-ddbf75dc6de4"
+
+        cls.uuid = _uuid(0)
+        cls.timestamp_array = CharacteristicTimeArray(_uuid(1), name="Timestamp Array")
+        cls.timestamp_count = CharacteristicInt(_uuid(2), name="Timestamp Count")
+        cls.skip_reason = CharacteristicIntFlagArray(
+            _uuid(3), name="Skip Reason", flag=HybridWateringHistorySkipReason
+        )
+        cls.watering_duration = CharacteristicLongArray(
+            _uuid(4), name="Watering Duration"
+        )
+        super().__init_subclass__(**kwargs)
+
+
+class HybridWateringHistory1(HybridWateringHistory, index=0):
+    pass
+
+
+class HybridWateringHistory2(HybridWateringHistory, index=1):
+    pass
+
+
 class ErrorHistory(Service):
     uuid = "98bdeeee-0b0e-421a-84e5-ddbf75dc6de4"
 
