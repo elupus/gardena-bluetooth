@@ -1,5 +1,6 @@
 import logging
-from datetime import datetime, timedelta
+from calendar import Day
+from datetime import datetime, time, timedelta
 from enum import IntEnum
 
 import pytest
@@ -20,9 +21,13 @@ from gardena_bluetooth.parse import (
     CharacteristicNullString,
     CharacteristicNullStringUf8,
     CharacteristicPositionContourMask,
+    CharacteristicSchedule,
+    CharacteristicScheduleData,
     CharacteristicSMPData,
     CharacteristicStartStopWatering,
     CharacteristicString,
+    CharacteristicTimeDelta,
+    CharacteristicTimeOfDay,
     Contour,
     ContourPoint,
     ManufacturerData,
@@ -203,6 +208,33 @@ def test_int_enum():
     assert raw == b"\x00"
     data = char.decode(raw)
     assert data is Values.A
+
+
+def test_time_of_day():
+    raw = CharacteristicTimeOfDay.encode(time(7, 30, 15))
+    assert raw == (27015).to_bytes(4, "little")
+    assert CharacteristicTimeOfDay.decode(raw) == time(7, 30, 15)
+
+
+def test_time_delta():
+    raw = CharacteristicTimeDelta.encode(timedelta(minutes=10))
+    assert raw == (600).to_bytes(4, "little")
+    assert CharacteristicTimeDelta.decode(raw) == timedelta(minutes=10)
+
+
+def test_schedule_encode_decode():
+    value = CharacteristicScheduleData(
+        start_time=time(7, 0),
+        duration=timedelta(minutes=15),
+        weekdays={Day.MONDAY, Day.WEDNESDAY, Day.FRIDAY},
+        active=True,
+        contours={Contour.CONTOUR_1, Contour.CONTOUR_3},
+    )
+    raw = CharacteristicSchedule.encode(value)
+    assert raw == (
+        (25200).to_bytes(4, "little") + (900).to_bytes(4, "little") + b"\x15\x01\x05"
+    )
+    assert CharacteristicSchedule.decode(raw) == value
 
 
 def test_watering_start():
