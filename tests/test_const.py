@@ -181,3 +181,17 @@ def test_aqua_contour_watering_pause(raw: bytes, minutes: int) -> None:
     char = AquaContourWatering.watering_pause
     assert char.decode(raw) == minutes
     assert char.encode(minutes) == raw
+
+
+@pytest.mark.parametrize(
+    ("char", "raw", "service_id"),
+    [
+        (Schedule_1.valve_link, b"\x10\x0f", 0x0F10),
+        (Schedule_1.valve_link, b"\x00\x00", 0),
+        (Schedule_1.sensor_link, b"\x10\x00", 0x0010),
+        (Schedule_1.sensor_link, b"\x00\x00", 0),
+    ],
+)
+def test_schedule_links(char, raw: bytes, service_id: int) -> None:
+    assert char.decode(raw) == service_id
+    assert char.encode(service_id) == raw
