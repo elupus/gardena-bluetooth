@@ -355,6 +355,12 @@ class ErrorHistory(Service):
 
 class Pump(Service):
     uuid = "98bd0100-0b0e-421a-84e5-ddbf75dc6de4"
+    products = {
+        ProductType.PUMP,
+        ProductType.PRESSURE_TANKS,
+        ProductType.AUTOMATS,
+        ProductType.UNKNOWN,
+    }
 
     status = CharacteristicInt("98bd0101-0b0e-421a-84e5-ddbf75dc6de4")
     tank_preassure = CharacteristicUInt16("98bd0102-0b0e-421a-84e5-ddbf75dc6de4")
