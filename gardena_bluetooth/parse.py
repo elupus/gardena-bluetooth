@@ -989,6 +989,28 @@ class CharacteristicBatteryLevelStatus(
 
 
 @dataclass
+class PumpErrorData:
+    error_code: int
+    info_code: int
+
+
+@dataclass
+class CharacteristicPumpError(Characteristic[PumpErrorData]):
+    """Error and info code of a pump, their meaning depends on the product type."""
+
+    @classmethod
+    def decode(cls, data: bytes) -> PumpErrorData:
+        return PumpErrorData(
+            error_code=data[0] if len(data) > 0 else 0,
+            info_code=data[1] if len(data) > 1 else 0,
+        )
+
+    @classmethod
+    def encode(cls, value: PumpErrorData) -> bytes:
+        return bytes([value.error_code, value.info_code])
+
+
+@dataclass
 class CharacteristicScheduleData:
     start_time: time
     duration: timedelta

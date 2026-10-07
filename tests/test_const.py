@@ -1,11 +1,18 @@
+from enum import IntEnum
+
 import pytest
 
 from gardena_bluetooth.const import (
+    PUMP_ERROR_CODES,
     AquaContourContours,
     AquaContourWatering,
     AquaContourWateringMode,
     HybridValveActivationReason,
+    PressureTankErrorCode,
+    PressureTankInfoCode,
     Pump,
+    PumpErrorCode,
+    PumpInfoCode,
     PumpPtuMode,
     PumpStatus,
     Schedule,
@@ -27,6 +34,7 @@ from gardena_bluetooth.parse import (
     ActivationReason,
     Characteristic,
     ProductType,
+    PumpErrorData,
     Service,
 )
 
@@ -249,3 +257,42 @@ def test_pump_status(status: PumpStatus) -> None:
 def test_pump_ptu_mode(mode: PumpPtuMode) -> None:
     assert Pump.ptu_mode.decode(bytes([mode.value])) is mode
     assert Pump.ptu_mode.encode(mode) == bytes([mode.value])
+
+
+@pytest.mark.parametrize(
+    ("raw", "value"),
+    [
+        (b"\x00\x00", PumpErrorData(0, 0)),
+        (b"\x03\x08", PumpErrorData(3, 8)),
+        (b"\x0e", PumpErrorData(14, 0)),
+        (b"", PumpErrorData(0, 0)),
+    ],
+)
+def test_pump_error_code(raw: bytes, value: PumpErrorData) -> None:
+    assert Pump.error_code.decode(raw) == value
+
+
+@pytest.mark.parametrize(
+    ("product_type", "error_code", "info_code"),
+    [
+        (ProductType.PUMP, PumpErrorCode.NO_FLOW_DETECTED, PumpInfoCode.CLEAN_FILTER),
+        (
+            ProductType.PRESSURE_TANKS,
+            PressureTankErrorCode.E15_LEAKAGE,
+            PressureTankInfoCode.HEAT,
+        ),
+        (
+            ProductType.AUTOMATS,
+            PressureTankErrorCode.E16_RUNTIME,
+            PressureTankInfoCode.RAIN_PAUSE,
+        ),
+    ],
+)
+def test_pump_error_codes_per_product(
+    product_type: ProductType, error_code: IntEnum, info_code: IntEnum
+) -> None:
+    error_enum, info_enum = PUMP_ERROR_CODES[product_type]
+    raw = Pump.error_code.encode(PumpErrorData(error_code.value, info_code.value))
+    data = Pump.error_code.decode(raw)
+    assert error_enum(data.error_code) is error_code
+    assert info_enum(data.info_code) is info_code
