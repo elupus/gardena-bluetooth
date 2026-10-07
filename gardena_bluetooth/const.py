@@ -392,6 +392,16 @@ class PumpStatus(IntEnum):
     HARD_FAULT = 4
 
 
+class PumpPtuMode(IntEnum):
+    NORMAL = 0
+    ECO = 1
+    INDIVIDUAL = 2
+    NORMAL_POWER_BOOST = 3
+    ECO_POWER_BOOST = 4
+    INDIVIDUAL_POWER_BOOST = 5
+    TANK = 6
+
+
 class Pump(Service):
     uuid = "98bd0100-0b0e-421a-84e5-ddbf75dc6de4"
     products = {
@@ -406,7 +416,10 @@ class Pump(Service):
     )
     tank_preassure = CharacteristicUInt16("98bd0102-0b0e-421a-84e5-ddbf75dc6de4")
     flow_rate = CharacteristicUInt16("98bd0103-0b0e-421a-84e5-ddbf75dc6de4")
-    ptu_mode = CharacteristicInt("98bd0104-0b0e-421a-84e5-ddbf75dc6de4")
+    ptu_mode = CharacteristicIntEnum(
+        "98bd0104-0b0e-421a-84e5-ddbf75dc6de4", enum=PumpPtuMode
+    )
+    """Pressure tank unit operating mode, for pressure tanks and automats only."""
     leakage_detection = CharacteristicBool("98bd0105-0b0e-421a-84e5-ddbf75dc6de4")
     min_preassure = CharacteristicUInt16("98bd0106-0b0e-421a-84e5-ddbf75dc6de4")
     max_preassure = CharacteristicUInt16("98bd0107-0b0e-421a-84e5-ddbf75dc6de4")
