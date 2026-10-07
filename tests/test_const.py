@@ -159,3 +159,13 @@ def test_watering_history_skip_reason() -> None:
     raw = char.encode(value)
     assert raw == b"\x00\x05\x80"
     assert char.decode(raw) == value
+
+
+@pytest.mark.parametrize(
+    ("raw", "minutes"),
+    [(b"\x58\x02", 600), (b"\xc0\xa8", 43200), (b"\xff\xff", 65535)],
+)
+def test_aqua_contour_watering_pause(raw: bytes, minutes: int) -> None:
+    char = AquaContourWatering.watering_pause
+    assert char.decode(raw) == minutes
+    assert char.encode(minutes) == raw
