@@ -15,6 +15,7 @@ from gardena_bluetooth.parse import (
     CharacteristicBatteryLevelStatusData,
     CharacteristicContourPoints,
     CharacteristicErrorData,
+    CharacteristicEventHistoryData,
     CharacteristicIgnore,
     CharacteristicIntEnum,
     CharacteristicIntKeys,
@@ -40,6 +41,7 @@ from gardena_bluetooth.parse import (
     SegmentAssembler,
     SegmentCommand,
     SegmentQuery,
+    SkipReason,
     WateringSource,
 )
 
@@ -462,3 +464,18 @@ def test_segment_assembler_rejects_frames_after_done(caplog):
 
     assert assembler.payload == bytes([45, 45])
     assert "already complete" in caplog.text
+
+
+@pytest.mark.parametrize("schedule_index", [1, 15, 254, 255])
+def test_event_history_schedule_index(schedule_index: int):
+    value = CharacteristicEventHistoryData(
+        index=1,
+        total_events=2,
+        timestamp=datetime(2026, 9, 22, 4, 30, 1),
+        schedule_index=schedule_index,
+        skip_reason=SkipReason.NONE,
+        duration=timedelta(minutes=5),
+    )
+    raw = CharacteristicEventHistoryData.encode(value)
+    assert raw[6] == schedule_index
+    assert CharacteristicEventHistoryData.decode(raw) == value
