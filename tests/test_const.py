@@ -229,3 +229,10 @@ def test_pump_filter_reminder(raw: bytes, hours: int) -> None:
 def test_aqua_contour_watering_active(raw: bytes, mode) -> None:
     assert AquaContourWatering.watering_active.decode(raw) is mode
     assert AquaContourWatering.watering_active.encode(mode) == raw
+
+
+def test_valve_active_state() -> None:
+    assert Valve.active_state.uuid == "98bd0f18-0b0e-421a-84e5-ddbf75dc6de4"
+    assert Valve.active_state.unique_id in Valve.characteristics
+    assert Valve.active_state.decode(b"\x01") is True
+    assert Valve.active_state.decode(b"\x00") is False
