@@ -2,6 +2,8 @@ import pytest
 
 from gardena_bluetooth.const import (
     AquaContourContours,
+    AquaContourWatering,
+    HybridValveActivationReason,
     Pump,
     Schedule,
     Schedule_1,
@@ -10,8 +12,17 @@ from gardena_bluetooth.const import (
     Schedule_4,
     Schedule_5,
     StandardBattery,
+    Valve,
+    Valve1,
+    Valve2,
+    ValveActivationReason,
 )
-from gardena_bluetooth.parse import Characteristic, ProductType, Service
+from gardena_bluetooth.parse import (
+    ActivationReason,
+    Characteristic,
+    ProductType,
+    Service,
+)
 
 
 @pytest.mark.parametrize(
@@ -114,3 +125,23 @@ def test_pump_service_not_for_water_control_family(product_type: ProductType) ->
     """Service 0100 is device configuration on hybrid water controls."""
     assert Service.find_service(Pump.uuid, product_type) is None
     assert Pump not in Service.services_for_product_type(product_type)
+
+
+@pytest.mark.parametrize(
+    ("char", "raw", "expected"),
+    [
+        (Valve.activation_reason, b"\x00", ValveActivationReason.MANUAL),
+        (Valve.activation_reason, b"\x01", ValveActivationReason.SCHEDULE),
+        (
+            Valve1.activation_reason,
+            b"\x01",
+            HybridValveActivationReason.PHYSICAL_BUTTON,
+        ),
+        (Valve1.activation_reason, b"\x03", HybridValveActivationReason.SCHEDULE),
+        (Valve2.activation_reason, b"\x0a", HybridValveActivationReason.OTHER_SOURCES),
+        (AquaContourWatering.activation_reason, b"\x02", ActivationReason.SCHEDULE),
+        (AquaContourWatering.activation_reason, b"\x04", ActivationReason.SETUP),
+    ],
+)
+def test_activation_reason(char, raw: bytes, expected) -> None:
+    assert char.decode(raw) is expected

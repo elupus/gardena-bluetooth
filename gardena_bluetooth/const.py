@@ -61,6 +61,11 @@ class Scan(Service):
     )
 
 
+class ValveActivationReason(IntEnum):
+    MANUAL = 0
+    SCHEDULE = 1
+
+
 class Valve(Service):
     uuid = "98bd0f10-0b0e-421a-84e5-ddbf75dc6de4"
 
@@ -69,8 +74,15 @@ class Valve(Service):
     remaining_open_time = CharacteristicLong("98bd0f13-0b0e-421a-84e5-ddbf75dc6de4")
     manual_watering_time = CharacteristicLong("98bd0f14-0b0e-421a-84e5-ddbf75dc6de4")
     activation_reason = CharacteristicIntEnum(
-        "98bd0f15-0b0e-421a-84e5-ddbf75dc6de4", enum=ActivationReason
+        "98bd0f15-0b0e-421a-84e5-ddbf75dc6de4", enum=ValveActivationReason
     )
+
+
+class HybridValveActivationReason(IntEnum):
+    NONE = 0
+    PHYSICAL_BUTTON = 1
+    SCHEDULE = 3
+    OTHER_SOURCES = 10
 
 
 class ValveX(Service, ABC):
@@ -95,7 +107,8 @@ class Valve1(ValveX):
     state = CharacteristicBool("98bda008-0b0e-421a-84e5-ddbf75dc6de4")
     remaining_time_open = CharacteristicLong("98bda010-0b0e-421a-84e5-ddbf75dc6de4")
     activation_reason = CharacteristicIntEnum(
-        "98bda011-0b0e-421a-84e5-ddbf75dc6de4", enum=ActivationReason
+        "98bda011-0b0e-421a-84e5-ddbf75dc6de4",
+        enum=HybridValveActivationReason,
     )
     start_watering = CharacteristicStartStopWatering(
         "98bda020-0b0e-421a-84e5-ddbf75dc6de4"
@@ -116,7 +129,8 @@ class Valve2(ValveX):
     state = CharacteristicBool("98bda108-0b0e-421a-84e5-ddbf75dc6de4")
     remaining_time_open = CharacteristicLong("98bda110-0b0e-421a-84e5-ddbf75dc6de4")
     activation_reason = CharacteristicIntEnum(
-        "98bda111-0b0e-421a-84e5-ddbf75dc6de4", enum=ActivationReason
+        "98bda111-0b0e-421a-84e5-ddbf75dc6de4",
+        enum=HybridValveActivationReason,
     )
     start_watering = CharacteristicStartStopWatering(
         "98bda120-0b0e-421a-84e5-ddbf75dc6de4"
