@@ -6,6 +6,7 @@ from gardena_bluetooth.const import (
     AquaContourWateringMode,
     HybridValveActivationReason,
     Pump,
+    PumpStatus,
     Schedule,
     Schedule_1,
     Schedule_2,
@@ -236,3 +237,8 @@ def test_valve_active_state() -> None:
     assert Valve.active_state.unique_id in Valve.characteristics
     assert Valve.active_state.decode(b"\x01") is True
     assert Valve.active_state.decode(b"\x00") is False
+
+
+@pytest.mark.parametrize("status", list(PumpStatus))
+def test_pump_status(status: PumpStatus) -> None:
+    assert Pump.status.decode(bytes([status.value])) is status
