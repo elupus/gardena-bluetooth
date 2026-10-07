@@ -77,6 +77,8 @@ class Valve(Service):
     activation_reason = CharacteristicIntEnum(
         "98bd0f15-0b0e-421a-84e5-ddbf75dc6de4", enum=ValveActivationReason
     )
+    active_state = CharacteristicBool("98bd0f18-0b0e-421a-84e5-ddbf75dc6de4")
+    """Whether the valve is actively watering."""
 
 
 class HybridValveActivationReason(IntEnum):
