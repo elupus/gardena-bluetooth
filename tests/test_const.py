@@ -2,6 +2,7 @@ import pytest
 
 from gardena_bluetooth.const import (
     AquaContourContours,
+    Pump,
     Schedule,
     Schedule_1,
     Schedule_2,
@@ -95,3 +96,21 @@ def test_find_characteristics_returns_all_sharing_a_uuid():
     assert AquaContourContours.contour_points_1 in chars
     assert AquaContourContours.contour_points_5 in chars
     assert len(chars) == 6
+
+
+@pytest.mark.parametrize(
+    "product_type",
+    [ProductType.PUMP, ProductType.PRESSURE_TANKS, ProductType.AUTOMATS],
+)
+def test_pump_service_for_pump_family(product_type: ProductType) -> None:
+    assert Service.find_service(Pump.uuid, product_type) is Pump
+
+
+@pytest.mark.parametrize(
+    "product_type",
+    [ProductType.WATER_COMPUTER, ProductType.VALVE, ProductType.AQUA_CONTOURS],
+)
+def test_pump_service_not_for_water_control_family(product_type: ProductType) -> None:
+    """Service 0100 is device configuration on hybrid water controls."""
+    assert Service.find_service(Pump.uuid, product_type) is None
+    assert Pump not in Service.services_for_product_type(product_type)
