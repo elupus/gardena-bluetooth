@@ -3,6 +3,7 @@ import pytest
 from gardena_bluetooth.const import (
     AquaContourContours,
     AquaContourWatering,
+    AquaContourWateringMode,
     HybridValveActivationReason,
     Pump,
     Schedule,
@@ -213,3 +214,18 @@ def test_sensor_type(raw: bytes, value: str) -> None:
 def test_pump_filter_reminder(raw: bytes, hours: int) -> None:
     assert Pump.filter_reminder.decode(raw) == hours
     assert Pump.filter_reminder.encode(hours) == raw
+
+
+@pytest.mark.parametrize(
+    ("raw", "mode"),
+    [
+        (b"\x00", AquaContourWateringMode.REST),
+        (b"\x05", AquaContourWateringMode.CONTOUR_5),
+        (b"\xfd", AquaContourWateringMode.PREVIEW),
+        (b"\xfe", AquaContourWateringMode.STEP_TEST),
+        (b"\xff", AquaContourWateringMode.SETUP_MODE),
+    ],
+)
+def test_aqua_contour_watering_active(raw: bytes, mode) -> None:
+    assert AquaContourWatering.watering_active.decode(raw) is mode
+    assert AquaContourWatering.watering_active.encode(mode) == raw

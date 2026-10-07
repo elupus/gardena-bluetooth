@@ -474,6 +474,7 @@ class AquaContour(Service):
 
 class AquaContourWateringMode(IntEnum):
     PREVIEW = -3
+    STEP_TEST = -2
     SETUP_MODE = -1
     REST = 0
     CONTOUR_1 = 1
