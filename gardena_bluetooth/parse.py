@@ -478,7 +478,7 @@ class CharacteristicWeekdays(Characteristic[set[Day]]):
     @classmethod
     def decode(cls, data: bytes) -> set[Day]:
         value = int.from_bytes(data, "little", signed=False)
-        return {Day(i) for i in range(8) if (value >> i) & 1}
+        return {day for day in Day if (value >> day.value) & 1}
 
     @classmethod
     def encode(cls, value: set[Day]) -> bytes:
