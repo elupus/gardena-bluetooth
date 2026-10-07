@@ -384,6 +384,14 @@ class ErrorHistory(Service):
     error_count = CharacteristicInt("98bdeef0-0b0e-421a-84e5-ddbf75dc6de4")
 
 
+class PumpStatus(IntEnum):
+    OFF = 0
+    SUCTION = 1
+    PUMPING_MANUAL = 2
+    PUMPING_SCHEDULE = 3
+    HARD_FAULT = 4
+
+
 class Pump(Service):
     uuid = "98bd0100-0b0e-421a-84e5-ddbf75dc6de4"
     products = {
@@ -393,7 +401,9 @@ class Pump(Service):
         ProductType.UNKNOWN,
     }
 
-    status = CharacteristicInt("98bd0101-0b0e-421a-84e5-ddbf75dc6de4")
+    status = CharacteristicIntEnum(
+        "98bd0101-0b0e-421a-84e5-ddbf75dc6de4", enum=PumpStatus
+    )
     tank_preassure = CharacteristicUInt16("98bd0102-0b0e-421a-84e5-ddbf75dc6de4")
     flow_rate = CharacteristicUInt16("98bd0103-0b0e-421a-84e5-ddbf75dc6de4")
     ptu_mode = CharacteristicInt("98bd0104-0b0e-421a-84e5-ddbf75dc6de4")
