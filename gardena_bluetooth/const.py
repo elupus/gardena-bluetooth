@@ -399,7 +399,8 @@ class Pump(Service):
     min_preassure = CharacteristicUInt16("98bd0106-0b0e-421a-84e5-ddbf75dc6de4")
     max_preassure = CharacteristicUInt16("98bd0107-0b0e-421a-84e5-ddbf75dc6de4")
     child_lock = CharacteristicBool("98bd0108-0b0e-421a-84e5-ddbf75dc6de4")
-    filter_reminder = CharacteristicInt("98bd0109-0b0e-421a-84e5-ddbf75dc6de4")
+    filter_reminder = CharacteristicUInt16("98bd0109-0b0e-421a-84e5-ddbf75dc6de4")
+    """Filter cleaning reminder interval in hours, 0 when off."""
     direct_start = CharacteristicBool("98bd010a-0b0e-421a-84e5-ddbf75dc6de4")
     max_runtime = CharacteristicInt("98bd010b-0b0e-421a-84e5-ddbf75dc6de4")
     safety_pump_time = CharacteristicInt("98bd010c-0b0e-421a-84e5-ddbf75dc6de4")
