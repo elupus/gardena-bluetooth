@@ -6,6 +6,7 @@ from gardena_bluetooth.const import (
     PUMP_ERROR_CODES,
     AquaContour,
     AquaContourContours,
+    AquaContourManualModeError,
     AquaContourWatering,
     AquaContourWateringMode,
     HybridValveActivationReason,
@@ -23,6 +24,7 @@ from gardena_bluetooth.const import (
     Schedule_4,
     Schedule_5,
     Sensor,
+    Spray,
     StandardBattery,
     Valve,
     Valve1,
@@ -304,3 +306,8 @@ def test_aqua_contour_local_time_adjusted() -> None:
     assert char.uuid == "98bd0a13-0b0e-421a-84e5-ddbf75dc6de4"
     assert char.unique_id in AquaContour.characteristics
     assert char.decode(b"\x01") is True
+
+
+@pytest.mark.parametrize("error", list(AquaContourManualModeError))
+def test_spray_watering_mode_error(error: AquaContourManualModeError) -> None:
+    assert Spray.watering_mode_error.decode(bytes([error.value])) is error

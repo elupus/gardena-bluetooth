@@ -511,6 +511,14 @@ class Pump(Service):
     total_motor_runtime = CharacteristicLong("98bd0111-0b0e-421a-84e5-ddbf75dc6de4")
 
 
+class AquaContourManualModeError(IntEnum):
+    NO_ERROR = 0
+    NO_WATER = 1
+    NOT_ENOUGH_WATER = 2
+    CHARGER_CONNECTED = 3
+    BATTERY_EMPTY = 4
+
+
 class Spray(Service):
     uuid = "98bd0110-0b0e-421a-84e5-ddbf75dc6de4"
     products = {ProductType.AQUA_CONTOURS}
@@ -524,8 +532,10 @@ class Spray(Service):
     current_sector = CharacteristicUInt16(
         "98bd0114-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
-    watering_mode_error = CharacteristicInt(
-        "98bd0115-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    watering_mode_error = CharacteristicIntEnum(
+        "98bd0115-0b0e-421a-84e5-ddbf75dc6de4",
+        variant="1",
+        enum=AquaContourManualModeError,
     )
 
 
