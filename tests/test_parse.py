@@ -190,6 +190,7 @@ def test_error_code():
     assert data.time_stamp == datetime(2026, 3, 9, 20, 25, 39)
     assert data.index == 1
     assert data.total_events == 1
+    assert char.encode(data) == b"\x01\x01\xc3,\xafi\x01"
 
 
 def test_int_keys():
