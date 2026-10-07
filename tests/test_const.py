@@ -19,6 +19,10 @@ from gardena_bluetooth.const import (
     HybridSchedule_6,
     HybridScheduleOffsetFrom,
     HybridValveActivationReason,
+    HybridWateringHistory,
+    HybridWateringHistory1,
+    HybridWateringHistory2,
+    HybridWateringHistorySkipReason,
     PressureTankErrorCode,
     PressureTankInfoCode,
     Pump,
@@ -406,3 +410,28 @@ def test_hybrid_schedule_values() -> None:
     assert schedule.end_offset_from.decode(b"\x04") is HybridScheduleOffsetFrom.START
     assert schedule.weekdays.encode({Day.MONDAY, Day.FRIDAY}) == b"\x11\x00\x00\x00"
     assert schedule.weekdays.decode(b"\x11\x00\x00\x00") == {Day.MONDAY, Day.FRIDAY}
+
+
+@pytest.mark.parametrize(
+    ("history", "index"),
+    [(HybridWateringHistory1, "0"), (HybridWateringHistory2, "1")],
+)
+def test_hybrid_watering_history(
+    history: type[HybridWateringHistory], index: str
+) -> None:
+    def _uuid(offset: str) -> str:
+        return f"98bd9{index}{offset}-0b0e-421a-84e5-ddbf75dc6de4"
+
+    assert history.uuid == _uuid("00")
+    assert [char.uuid for char in history.characteristics.values()] == [
+        _uuid(offset) for offset in ("01", "02", "03", "04")
+    ]
+    assert history.skip_reason.decode(b"\x00\x40\x0c") == [
+        HybridWateringHistorySkipReason.NONE,
+        HybridWateringHistorySkipReason.FROST_RISK,
+        HybridWateringHistorySkipReason.BATTERY
+        | HybridWateringHistorySkipReason.WATERING_PAUSE,
+    ]
+    assert history.watering_duration.decode(
+        (600).to_bytes(4, "little") + (30).to_bytes(4, "little")
+    ) == [600, 30]
