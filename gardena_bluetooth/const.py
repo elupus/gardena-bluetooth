@@ -21,6 +21,7 @@ from .parse import (
     CharacteristicNullStringUf8,
     CharacteristicPnpId,
     CharacteristicPositionContourMask,
+    CharacteristicPumpError,
     CharacteristicSchedule,
     CharacteristicSMP,
     CharacteristicStartStopWatering,
@@ -402,6 +403,79 @@ class PumpPtuMode(IntEnum):
     TANK = 6
 
 
+class PumpErrorCode(IntEnum):
+    """Error code of garden pumps."""
+
+    NO_ERROR = 0
+    SUCTION_NOT_COMPLETED = 1
+    PUMP_NOT_FILLED_WITH_WATER = 2
+    NO_FLOW_DETECTED = 3
+    COOLDOWN_SUCTION_NOT_COMPLETED = 4
+    COOLDOWN_PUMP_NOT_FILLED_WITH_WATER = 5
+    COOLDOWN_NO_FLOW_DETECTED = 6
+    HEAT_ERROR = 7
+    FROST_ERROR = 8
+    FLOW_ERROR = 9
+    HARDWARE_ERROR = 10
+
+
+class PumpInfoCode(IntEnum):
+    """Info code of garden pumps."""
+
+    NO_INFO = 0
+    DRY_RUN = 1
+    FROST = 2
+    HEAT = 3
+    MAX_RUNTIME = 4
+    SOIL_TOO_MOIST = 5
+    CONNECT_TO_DEVICE = 6
+    DISCONNECT_POWER = 7
+    CLEAN_FILTER = 8
+    RAIN_PAUSE = 9
+
+
+class PressureTankErrorCode(IntEnum):
+    """Error code of pressure tanks and automats."""
+
+    NO_ERROR = 0
+    E0_FLOW = 1
+    E1_DRYRUN = 2
+    E2_DRYRUN = 3
+    E4_COOLDOWN = 4
+    E5_COOLDOWN = 5
+    E7_HEAT = 6
+    E8_FROST = 7
+    E9_HARDWARE = 8
+    E10_DRYRUN = 9
+    E11_DRYRUN = 10
+    E12_COOLDOWN = 11
+    E13_COOLDOWN = 12
+    E14_NO_CALIB = 13
+    E15_LEAKAGE = 14
+    E16_RUNTIME = 15
+
+
+class PressureTankInfoCode(IntEnum):
+    """Info code of pressure tanks and automats."""
+
+    NO_INFO = 0
+    FROST = 1
+    HEAT = 2
+    SOIL_TOO_MOIST = 3
+    CONNECT_TO_DEVICE = 4
+    DISCONNECT_POWER = 5
+    CLEAN_FILTER = 6
+    RAIN_PAUSE = 7
+
+
+PUMP_ERROR_CODES: dict[ProductType, tuple[type[IntEnum], type[IntEnum]]] = {
+    ProductType.PUMP: (PumpErrorCode, PumpInfoCode),
+    ProductType.PRESSURE_TANKS: (PressureTankErrorCode, PressureTankInfoCode),
+    ProductType.AUTOMATS: (PressureTankErrorCode, PressureTankInfoCode),
+}
+"""Error and info code enums to interpret `Pump.error_code` per product type."""
+
+
 class Pump(Service):
     uuid = "98bd0100-0b0e-421a-84e5-ddbf75dc6de4"
     products = {
@@ -431,7 +505,8 @@ class Pump(Service):
     safety_pump_time = CharacteristicInt("98bd010c-0b0e-421a-84e5-ddbf75dc6de4")
     cool_down_timer = CharacteristicUInt16("98bd010d-0b0e-421a-84e5-ddbf75dc6de4")
     water_temperature = CharacteristicInt("98bd010e-0b0e-421a-84e5-ddbf75dc6de4")
-    error_code = CharacteristicBytes("98bd010f-0b0e-421a-84e5-ddbf75dc6de4")
+    error_code = CharacteristicPumpError("98bd010f-0b0e-421a-84e5-ddbf75dc6de4")
+    """Error and info code, see `PUMP_ERROR_CODES` for their meaning."""
     user_motor_runtime = CharacteristicLong("98bd0110-0b0e-421a-84e5-ddbf75dc6de4")
     total_motor_runtime = CharacteristicLong("98bd0111-0b0e-421a-84e5-ddbf75dc6de4")
 
