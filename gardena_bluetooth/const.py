@@ -160,6 +160,27 @@ class DeviceConfiguration(Service):
     )
 
 
+class HybridDeviceConfiguration(Service):
+    """Device configuration of hybrid water controls (single, dual and pipeline)."""
+
+    uuid = "98bd0100-0b0e-421a-84e5-ddbf75dc6de4"
+    products = {ProductType.WATER_COMPUTER}
+    variant = "1"
+
+    unix_timestamp = CharacteristicTime(
+        "98bd0101-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
+    rain_pause = CharacteristicLong("98bd0102-0b0e-421a-84e5-ddbf75dc6de4", variant="1")
+    """Watering pause in minutes."""
+    seasonal_adjust = CharacteristicInt(
+        "98bd0103-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
+    """Watering time in percent of the scheduled duration, 0-100."""
+    custom_device_name = CharacteristicNullStringUf8(
+        "98bd0104-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
+    )
+
+
 class AquaContourContours(Service):
     uuid = "98bd0b10-0b0e-421a-84e5-ddbf75dc6de4"
     products = {ProductType.AQUA_CONTOURS}
