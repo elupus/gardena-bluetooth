@@ -1,12 +1,18 @@
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
+from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak.backends.device import BLEDevice
+from bleak.backends.service import BleakGATTService, BleakGATTServiceCollection
 from bleak.exc import BleakError
 
 from gardena_bluetooth.client import DEFAULT_DELAY, CachedConnection, Client
-from gardena_bluetooth.const import AquaContourContours
-from gardena_bluetooth.exceptions import CharacteristicNoAccess, CommunicationFailure
+from gardena_bluetooth.const import AquaContourContours, Valve1, Valve2
+from gardena_bluetooth.exceptions import (
+    CharacteristicNoAccess,
+    CharacteristicNotFound,
+    CommunicationFailure,
+)
 from gardena_bluetooth.parse import ContourPoint, ProductType
 
 
@@ -106,7 +112,7 @@ async def test_subscribe_char_raw_raises_when_characteristic_not_notifiable(
         await client.subscribe_char_raw("uuid", lambda *_: None)
 
 
-def _fake_segmented_client(write_gatt_char, *, notify_uuid, write_uuid):
+def _fake_segmented_client(write_gatt_char, *, service_uuid, notify_uuid, write_uuid):
     notify_callback = None
 
     async def _start_notify(_characteristic, callback):
@@ -125,9 +131,17 @@ def _fake_segmented_client(write_gatt_char, *, notify_uuid, write_uuid):
             return fake_write_characteristic
         raise AssertionError(f"Unexpected characteristic lookup for {uuid}")
 
+    fake_service = MagicMock(name="service")
+    fake_service.get_characteristic.side_effect = _get_characteristic
+
+    def _get_service(uuid):
+        if uuid == service_uuid:
+            return fake_service
+        raise AssertionError(f"Unexpected service lookup for {uuid}")
+
     fake_client = MagicMock()
     fake_client.is_connected = True
-    fake_client.services.get_characteristic.side_effect = _get_characteristic
+    fake_client.services.get_service.side_effect = _get_service
     fake_client.start_notify = AsyncMock(side_effect=_start_notify)
     fake_client.stop_notify = AsyncMock()
     fake_client.write_gatt_char = AsyncMock(side_effect=write_gatt_char)
@@ -160,6 +174,7 @@ async def test_read_raw_segmented_acks_single_final_frame(establish_connection):
     fake_client, fake_notify_characteristic, fake_write_characteristic, notify = (
         _fake_segmented_client(
             _write_gatt_char,
+            service_uuid=char.service_uuid,
             notify_uuid=char.uuid,
             write_uuid=char.write_uuid,
         )
@@ -202,6 +217,7 @@ async def test_read_raw_segmented_only_acks_final_frame_of_multi_frame_transfer(
     fake_client, fake_notify_characteristic, fake_write_characteristic, notify = (
         _fake_segmented_client(
             _write_gatt_char,
+            service_uuid=char.service_uuid,
             notify_uuid=char.uuid,
             write_uuid=char.write_uuid,
         )
@@ -246,6 +262,7 @@ async def test_read_char_routes_segmented_characteristic_through_segmented_proto
     fake_client, _fake_notify_characteristic, fake_write_characteristic, notify = (
         _fake_segmented_client(
             _write_gatt_char,
+            service_uuid=char.service_uuid,
             notify_uuid=char.uuid,
             write_uuid=char.write_uuid,
         )
@@ -280,6 +297,7 @@ async def test_read_raw_segmented_times_out_without_final_frame(establish_connec
     fake_client, fake_notify_characteristic, _fake_write_characteristic, _notify = (
         _fake_segmented_client(
             _write_gatt_char,
+            service_uuid=char.service_uuid,
             notify_uuid=char.uuid,
             write_uuid=char.write_uuid,
         )
@@ -291,3 +309,94 @@ async def test_read_raw_segmented_times_out_without_final_frame(establish_connec
         await client.read_raw_segmented(char, index=0, timeout=0.01)
 
     fake_client.stop_notify.assert_awaited_once_with(fake_notify_characteristic)
+
+
+def _services(layout: dict[str, list[str]]) -> BleakGATTServiceCollection:
+    """Build a real bleak service collection, with readable characteristics."""
+    services = BleakGATTServiceCollection()
+    handle = 1
+    for service_uuid, char_uuids in layout.items():
+        service = BleakGATTService(None, handle, service_uuid)
+        services.add_service(service)
+        handle += 1
+        for char_uuid in char_uuids:
+            services.add_characteristic(
+                BleakGATTCharacteristic(
+                    None, handle, char_uuid, ["read"], lambda: 20, service
+                )
+            )
+            handle += 1
+    return services
+
+
+def _hybrid_client(establish_connection, layout: dict[str, list[str]]):
+    fake_client = MagicMock()
+    fake_client.is_connected = True
+    fake_client.services = _services(layout)
+    fake_client.read_gatt_char = AsyncMock(
+        side_effect=lambda characteristic: bytes([characteristic.service_handle])
+    )
+    establish_connection.side_effect = None
+    establish_connection.return_value = fake_client
+
+    device = BLEDevice(address="AA:BB:CC:DD:EE:FF", name="Gardena", details=None)
+    return Client(
+        CachedConnection(DEFAULT_DELAY, lambda: device), ProductType.WATER_COMPUTER
+    )
+
+
+@pytest.mark.asyncio
+async def test_read_char_scoped_to_service_with_shared_uuid(establish_connection):
+    """Both valves of a dual water control expose A002, one per valve service."""
+    client = _hybrid_client(
+        establish_connection,
+        {
+            Valve1.uuid: [Valve1.available.uuid],
+            Valve2.uuid: [Valve2.available.uuid],
+        },
+    )
+
+    assert await client.read_char_raw(
+        Valve1.available.uuid, service_uuid=Valve1.uuid
+    ) == bytes([1])
+    assert await client.read_char_raw(
+        Valve2.available.uuid, service_uuid=Valve2.uuid
+    ) == bytes([3])
+
+    assert await client.read_char(Valve2.available) is True
+    read = client._client._client.read_gatt_char.await_args.args[0]
+    assert (read.service_uuid, read.uuid) == (Valve2.uuid, Valve2.available.uuid)
+
+    chars = await client.get_all_characteristics()
+    assert Valve1.available.unique_id in chars
+    assert Valve2.available.unique_id in chars
+
+
+@pytest.mark.asyncio
+async def test_get_all_characteristics_matches_service(establish_connection):
+    """A single valve water control must not report the second valve."""
+    client = _hybrid_client(
+        establish_connection, {Valve1.uuid: [Valve1.available.uuid]}
+    )
+
+    chars = await client.get_all_characteristics()
+
+    assert Valve1.available.unique_id in chars
+    assert Valve2.available.unique_id not in chars
+
+
+@pytest.mark.asyncio
+async def test_read_char_not_found_outside_its_service(establish_connection):
+    """Lookups are strict, a matching uuid in another service is not used."""
+    client = _hybrid_client(
+        establish_connection, {Valve1.uuid: [Valve1.available.uuid]}
+    )
+
+    with pytest.raises(CharacteristicNotFound):
+        await client.read_char_raw(Valve2.available.uuid, service_uuid=Valve2.uuid)
+    assert (
+        await client.read_char_raw(
+            Valve2.available.uuid, None, service_uuid=Valve2.uuid
+        )
+        is None
+    )

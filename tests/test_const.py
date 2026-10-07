@@ -337,3 +337,28 @@ def test_aqua_contour_active_position(raw: bytes, value: int) -> None:
     char = AquaContourPosition.active_position
     assert char.decode(raw) == value
     assert char.encode(value) == raw
+
+
+def test_characteristic_records_its_service() -> None:
+    assert Valve1.available.service_uuid == Valve1.uuid
+    assert Valve2.available.service_uuid == Valve2.uuid
+    assert Schedule_2.sensor_link.service_uuid == Schedule_2.uuid
+
+
+def test_characteristic_shared_between_services_is_rejected(monkeypatch) -> None:
+    monkeypatch.setattr(Service, "registry", {})
+    monkeypatch.setattr(Characteristic, "registry", {})
+    shared = Characteristic("00000001-0000-0000-0000-000000000000")
+
+    class First(Service):
+        uuid = "00000010-0000-0000-0000-000000000000"
+        char = shared
+
+    with pytest.raises(ValueError, match="declared in both"):
+
+        class Second(Service):
+            uuid = "00000020-0000-0000-0000-000000000000"
+            char = shared
+
+    assert shared.service_uuid == First.uuid
+    assert list(Service.registry) == [First.uuid]

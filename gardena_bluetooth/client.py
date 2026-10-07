@@ -163,19 +163,40 @@ class Client:
     async def disconnect(self):
         await self._client.disconnect()
 
-    @overload
-    async def read_char_raw(self, uuid: str) -> bytes: ...
+    @staticmethod
+    def _find_characteristic(
+        client: BleakClient, uuid: str, service_uuid: str | None
+    ) -> BleakGATTCharacteristic | None:
+        """Find a characteristic, within its service when known.
+
+        Devices can expose the same characteristic uuid in several services,
+        which is ambiguous unless the lookup is scoped to the service.
+        """
+        if service_uuid is None:
+            return client.services.get_characteristic(uuid)
+        if (service := client.services.get_service(service_uuid)) is None:
+            return None
+        return service.get_characteristic(uuid)
 
     @overload
     async def read_char_raw(
-        self, uuid: str, default: DEFAULT_TYPE
+        self, uuid: str, *, service_uuid: str | None = None
+    ) -> bytes: ...
+
+    @overload
+    async def read_char_raw(
+        self, uuid: str, default: DEFAULT_TYPE, *, service_uuid: str | None = None
     ) -> bytes | DEFAULT_TYPE: ...
 
     async def read_char_raw(
-        self, uuid: str, default: DEFAULT_TYPE = DEFAULT_MISSING
+        self,
+        uuid: str,
+        default: DEFAULT_TYPE = DEFAULT_MISSING,
+        *,
+        service_uuid: str | None = None,
     ) -> bytes | DEFAULT_TYPE:
         async with self._client() as client:
-            characteristic = client.services.get_characteristic(uuid)
+            characteristic = self._find_characteristic(client, uuid, service_uuid)
             if characteristic is None:
                 if default is not DEFAULT_MISSING:
                     return default
@@ -217,7 +238,9 @@ class Client:
             if isinstance(char, CharacteristicSegmented):
                 data = await self.read_raw_segmented(char, char.query_index)
             else:
-                data = await self.read_char_raw(char.uuid)
+                data = await self.read_char_raw(
+                    char.uuid, service_uuid=char.service_uuid
+                )
             return char.decode(data)
         except CharacteristicNotFound:
             if default is not DEFAULT_MISSING:
@@ -225,11 +248,16 @@ class Client:
             raise
 
     async def write_char_raw(
-        self, uuid: str, data: bytes, response: bool | None = None
+        self,
+        uuid: str,
+        data: bytes,
+        response: bool | None = None,
+        *,
+        service_uuid: str | None = None,
     ):
         async with self._client() as client:
             """Write data to a characteristic."""
-            characteristic = client.services.get_characteristic(uuid)
+            characteristic = self._find_characteristic(client, uuid, service_uuid)
             if characteristic is None:
                 raise CharacteristicNotFound(f"Unable to find characteristic {uuid}")
 
@@ -263,14 +291,20 @@ class Client:
             return None
 
         data = char.encode(value)
-        await self.write_char_raw(char.uuid, data, response)
+        await self.write_char_raw(
+            char.uuid, data, response, service_uuid=char.service_uuid
+        )
 
     async def subscribe_char_raw(
-        self, uuid: str, callback: Callable[[BleakGATTCharacteristic, bytes], None]
+        self,
+        uuid: str,
+        callback: Callable[[BleakGATTCharacteristic, bytes], None],
+        *,
+        service_uuid: str | None = None,
     ) -> Callable[[], Awaitable[None]]:
         async with self._client() as client:
             """Subscribe to a characteristic."""
-            characteristic = client.services.get_characteristic(uuid)
+            characteristic = self._find_characteristic(client, uuid, service_uuid)
             if characteristic is None:
                 raise CharacteristicNotFound(f"Unable to find characteristic {uuid}")
 
@@ -314,7 +348,9 @@ class Client:
         if isinstance(char, CharacteristicIgnore):
             raise CharacteristicNoAccess(f"Characteristic {char.uuid} is ignored")
 
-        return await self.subscribe_char_raw(char.uuid, _callback)
+        return await self.subscribe_char_raw(
+            char.uuid, _callback, service_uuid=char.service_uuid
+        )
 
     async def read_raw_segmented(
         self,
@@ -335,9 +371,15 @@ class Client:
             if assembler.add_frame(segment):
                 done.set()
 
-        unsubscribe = await self.subscribe_char_raw(char.uuid, _on_notify)
+        unsubscribe = await self.subscribe_char_raw(
+            char.uuid, _on_notify, service_uuid=char.service_uuid
+        )
         try:
-            await self.write_char_raw(char.write_uuid, SegmentQuery(index).encode())
+            await self.write_char_raw(
+                char.write_uuid,
+                SegmentQuery(index).encode(),
+                service_uuid=char.service_uuid,
+            )
             try:
                 await asyncio.wait_for(done.wait(), timeout)
             except asyncio.TimeoutError as exc:
@@ -345,7 +387,11 @@ class Client:
                     f"Timed out waiting for segmented data at index {index}"
                 ) from exc
             LOGGER.debug("Acknowledging final segment for %s", char.name)
-            await self.write_char_raw(char.write_uuid, SegmentAck(index).encode())
+            await self.write_char_raw(
+                char.write_uuid,
+                SegmentAck(index).encode(),
+                service_uuid=char.service_uuid,
+            )
         finally:
             await unsubscribe()
 
@@ -373,14 +419,25 @@ class Client:
 
     async def get_all_characteristics(self) -> dict[str, Characteristic]:
         """Get all characteristics from device."""
-        uuids = await self.get_all_characteristics_uuid()
+        pairs = await self._get_all_service_characteristic_uuids()
         characteristics = {
             char.unique_id: char
             for service in self._services
             for char in service.characteristics.values()
-            if char.uuid in uuids
+            if (char.service_uuid, char.uuid) in pairs
         }
         return characteristics
+
+    async def _get_all_service_characteristic_uuids(self) -> set[tuple[str, str]]:
+        """Get all (service uuid, characteristic uuid) pairs from device."""
+        async with self._client() as client:
+            pairs = {
+                (service.uuid, characteristic.uuid)
+                for service in client.services
+                for characteristic in service.characteristics
+            }
+            LOGGER.debug("Characteristics: %s", pairs)
+            return pairs
 
     async def get_all_characteristics_uuid(self) -> set[str]:
         """Get all characteristics from device."""

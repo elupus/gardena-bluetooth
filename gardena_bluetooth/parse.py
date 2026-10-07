@@ -208,6 +208,10 @@ class Characteristic(Generic[CharacteristicType]):
     name: str = ""
     registry: ClassVar[dict[str, list[Self]]] = {}
     unique_id: str = field(init=False)
+    service_uuid: str | None = field(
+        default=None, init=False, repr=False, compare=False
+    )
+    """Uuid of the service declaring this characteristic, set on registration."""
 
     def __set_name__(self, _, name: str):
         self.name = pretty_name(name)
@@ -1091,12 +1095,22 @@ class Service:
             cls.unique_id = cls.uuid + ":" + cls.variant
         else:
             cls.unique_id = cls.uuid
-        cls.registry.setdefault(cls.uuid, []).append(cls)
+
+        chars = [
+            value for value in vars(cls).values() if isinstance(value, Characteristic)
+        ]
+        for char in chars:
+            if char.service_uuid not in (None, cls.uuid):
+                raise ValueError(
+                    f"Characteristic {char.unique_id} declared in both "
+                    f"{char.service_uuid} and {cls.uuid}"
+                )
 
         cls.characteristics = {}
-        for value in vars(cls).values():
-            if isinstance(value, Characteristic):
-                cls.characteristics[value.unique_id] = value
+        for char in chars:
+            char.service_uuid = cls.uuid
+            cls.characteristics[char.unique_id] = char
+        cls.registry.setdefault(cls.uuid, []).append(cls)
 
 
 @dataclass
