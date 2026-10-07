@@ -652,11 +652,20 @@ class FlowStatistics(Service):
     current = CharacteristicUInt16("98bd0e19-0b0e-421a-84e5-ddbf75dc6de4")
 
 
+class AquaContourPositionError(IntEnum):
+    NOT_AT_POSITION = -1
+    CLOSE_TO_POSITION = -2
+    NO_POSITION_DEFINED = -3
+
+
 class AquaContourPosition(Service):
     uuid = "98bd0130-0b0e-421a-84e5-ddbf75dc6de4"
     products = {ProductType.AQUA_CONTOURS}
 
-    active_position = CharacteristicInt("98bd0132-0b0e-421a-84e5-ddbf75dc6de4")
+    active_position = CharacteristicIntEnum(
+        "98bd0132-0b0e-421a-84e5-ddbf75dc6de4", enum=AquaContourPositionError
+    )
+    """Active position 1-5, or a negative error when automatically detected."""
     position_contour_mask = CharacteristicPositionContourMask(
         "98bd0135-0b0e-421a-84e5-ddbf75dc6de4"
     )

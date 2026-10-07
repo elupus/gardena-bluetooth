@@ -7,6 +7,8 @@ from gardena_bluetooth.const import (
     AquaContour,
     AquaContourContours,
     AquaContourManualModeError,
+    AquaContourPosition,
+    AquaContourPositionError,
     AquaContourRainSensitivity,
     AquaContourWatering,
     AquaContourWateringMode,
@@ -319,3 +321,19 @@ def test_aqua_contour_rain_sensitivity(sensitivity: AquaContourRainSensitivity) 
     char = AquaContourWatering.rain_sensitivity
     assert char.decode(bytes([sensitivity.value])) is sensitivity
     assert char.encode(sensitivity) == bytes([sensitivity.value])
+
+
+@pytest.mark.parametrize(
+    ("raw", "value"),
+    [
+        (b"\x01", 1),
+        (b"\x05", 5),
+        (b"\xff", AquaContourPositionError.NOT_AT_POSITION),
+        (b"\xfe", AquaContourPositionError.CLOSE_TO_POSITION),
+        (b"\xfd", AquaContourPositionError.NO_POSITION_DEFINED),
+    ],
+)
+def test_aqua_contour_active_position(raw: bytes, value: int) -> None:
+    char = AquaContourPosition.active_position
+    assert char.decode(raw) == value
+    assert char.encode(value) == raw
