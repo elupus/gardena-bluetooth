@@ -510,9 +510,10 @@ class AquaContourWatering(Service):
     skipped_reason = CharacteristicIntEnum(
         "98bd0d17-0b0e-421a-84e5-ddbf75dc6de4", variant="1", enum=SkipReason
     )
-    watering_pause = CharacteristicInt(
+    watering_pause = CharacteristicUInt16(
         "98bd0d18-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
+    """Watering pause in minutes, 65535 for indefinite pause."""
     seasonal_adjust = CharacteristicInt(
         "98bd0d19-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
