@@ -4,6 +4,7 @@ import pytest
 
 from gardena_bluetooth.const import (
     PUMP_ERROR_CODES,
+    AquaContour,
     AquaContourContours,
     AquaContourWatering,
     AquaContourWateringMode,
@@ -296,3 +297,10 @@ def test_pump_error_codes_per_product(
     data = Pump.error_code.decode(raw)
     assert error_enum(data.error_code) is error_code
     assert info_enum(data.info_code) is info_code
+
+
+def test_aqua_contour_local_time_adjusted() -> None:
+    char = AquaContour.local_time_adjusted
+    assert char.uuid == "98bd0a13-0b0e-421a-84e5-ddbf75dc6de4"
+    assert char.unique_id in AquaContour.characteristics
+    assert char.decode(b"\x01") is True

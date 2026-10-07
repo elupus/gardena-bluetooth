@@ -563,6 +563,8 @@ class AquaContour(Service):
     custom_device_name = CharacteristicNullStringUf8(
         "98bd0a12-0b0e-421a-84e5-ddbf75dc6de4"
     )
+    local_time_adjusted = CharacteristicBool("98bd0a13-0b0e-421a-84e5-ddbf75dc6de4")
+    """Whether local time was synchronized with a mobile device."""
     frost_warning = CharacteristicBool("98bd0a15-0b0e-421a-84e5-ddbf75dc6de4")
     active_contour = CharacteristicIntArray("98bd0a16-0b0e-421a-84e5-ddbf75dc6de4")
     """Per position (index 0-4 = position 1-5), the contour currently selected for it."""
