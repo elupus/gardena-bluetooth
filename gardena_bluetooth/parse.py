@@ -1077,6 +1077,7 @@ class CharacteristicEventHistoryData:
     total_events: int
     timestamp: datetime
     schedule_index: int
+    """Schedule 1-15, 254 for manual watering, 255 for upstream water control."""
     skip_reason: SkipReason
     duration: timedelta
 
@@ -1086,7 +1087,7 @@ class CharacteristicEventHistoryData:
             CharacteristicInt.decode(data[0:1]),
             CharacteristicInt.decode(data[1:2]),
             CharacteristicTime.decode(data[2:6]),
-            CharacteristicInt.decode(data[6:7]),
+            data[6],
             SkipReason.decode(data[7:8]),
             CharacteristicTimeDelta.decode(data[8:12]),
         )
@@ -1097,7 +1098,7 @@ class CharacteristicEventHistoryData:
             CharacteristicInt.encode(value.index)
             + CharacteristicInt.encode(value.total_events)
             + CharacteristicTime.encode(value.timestamp)
-            + CharacteristicInt.encode(value.schedule_index)
+            + bytes([value.schedule_index])
             + SkipReason.encode(value.skip_reason)
             + CharacteristicTimeDelta.encode(value.duration)
         )
