@@ -12,6 +12,7 @@ from gardena_bluetooth.const import (
     AquaContourRainSensitivity,
     AquaContourWatering,
     AquaContourWateringMode,
+    HybridDeviceConfiguration,
     HybridValveActivationReason,
     PressureTankErrorCode,
     PressureTankInfoCode,
@@ -155,7 +156,7 @@ def test_pump_service_for_pump_family(product_type: ProductType) -> None:
 )
 def test_pump_service_not_for_water_control_family(product_type: ProductType) -> None:
     """Service 0100 is device configuration on hybrid water controls."""
-    assert Service.find_service(Pump.uuid, product_type) is None
+    assert Service.find_service(Pump.uuid, product_type) is not Pump
     assert Pump not in Service.services_for_product_type(product_type)
 
 
@@ -362,3 +363,18 @@ def test_characteristic_shared_between_services_is_rejected(monkeypatch) -> None
 
     assert shared.service_uuid == First.uuid
     assert list(Service.registry) == [First.uuid]
+
+
+def test_hybrid_device_configuration() -> None:
+    service = HybridDeviceConfiguration
+    assert service.uuid == "98bd0100-0b0e-421a-84e5-ddbf75dc6de4"
+    assert [char.uuid[4:8] for char in service.characteristics.values()] == [
+        "0101",
+        "0102",
+        "0103",
+        "0104",
+    ]
+    assert Service.find_service(service.uuid, ProductType.WATER_COMPUTER) is service
+    assert Service.find_service(service.uuid, ProductType.PUMP) is Pump
+    assert service.rain_pause.decode((43200).to_bytes(4, "little")) == 43200
+    assert service.custom_device_name.decode(b"Garden\x00\x00") == "Garden"
