@@ -274,13 +274,15 @@ class AquaContourSchedule(Service):
 
 
 class Schedule(Service, ABC):
+    """A schedule, linking to valve and sensor by short service id, 0 when unlinked."""
+
     products = set(ProductType) - {ProductType.AQUA_CONTOURS}
     start_time: ClassVar[CharacteristicTimeOfDay]
     duration: ClassVar[CharacteristicTimeDelta]
     weekdays: ClassVar[CharacteristicWeekdays]
-    valve_link: ClassVar[CharacteristicBytes]
+    valve_link: ClassVar[CharacteristicUInt16]
     active: ClassVar[CharacteristicBool]
-    sensor_link: ClassVar[CharacteristicBool]
+    sensor_link: ClassVar[CharacteristicUInt16]
 
     def __init_subclass__(cls, *, instance: int, **kwargs):
         def _uuid(offset: int) -> str:
@@ -290,9 +292,9 @@ class Schedule(Service, ABC):
         cls.start_time = CharacteristicTimeOfDay(_uuid(1), name="Start Time")
         cls.duration = CharacteristicTimeDelta(_uuid(2), name="Duration")
         cls.weekdays = CharacteristicWeekdays(_uuid(3), name="Weekdays")
-        cls.valve_link = CharacteristicBytes(_uuid(4), name="Valve Link")
+        cls.valve_link = CharacteristicUInt16(_uuid(4), name="Valve Link")
         cls.active = CharacteristicBool(_uuid(5), name="Active")
-        cls.sensor_link = CharacteristicBool(_uuid(6), name="Sensor Link")
+        cls.sensor_link = CharacteristicUInt16(_uuid(6), name="Sensor Link")
         super().__init_subclass__(**kwargs)
 
 
