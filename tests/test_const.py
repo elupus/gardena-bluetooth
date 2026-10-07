@@ -66,6 +66,18 @@ def test_id_uniqueness():
 
 
 @pytest.mark.parametrize(
+    "service",
+    [service for services in Service.registry.values() for service in services],
+)
+def test_service_characteristics_not_shadowed(service: type[Service]) -> None:
+    """Ensure no characteristic of a service is hidden by another with the same id."""
+    declared = [
+        value for value in vars(service).values() if isinstance(value, Characteristic)
+    ]
+    assert len(service.characteristics) == len(declared)
+
+
+@pytest.mark.parametrize(
     "product_type",
     [
         ProductType.AQUA_CONTOURS,

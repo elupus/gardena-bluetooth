@@ -502,10 +502,7 @@ class AquaContourWatering(Service):
         "98bd0d15-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
     skipped_schedule_number = CharacteristicInt(
-        "98bd0d15-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
-    )
-    watering_control_error = CharacteristicIntEnum(
-        "98bd0d16-0b0e-421a-84e5-ddbf75dc6de4", variant="1", enum=AquaContourErrorCode
+        "98bd0d16-0b0e-421a-84e5-ddbf75dc6de4", variant="1"
     )
     skipped_reason = CharacteristicIntEnum(
         "98bd0d17-0b0e-421a-84e5-ddbf75dc6de4", variant="1", enum=SkipReason
