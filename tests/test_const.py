@@ -16,6 +16,8 @@ from gardena_bluetooth.const import (
     Valve1,
     Valve2,
     ValveActivationReason,
+    WateringHistory,
+    WateringHistorySkipReason,
 )
 from gardena_bluetooth.parse import (
     ActivationReason,
@@ -145,3 +147,15 @@ def test_pump_service_not_for_water_control_family(product_type: ProductType) ->
 )
 def test_activation_reason(char, raw: bytes, expected) -> None:
     assert char.decode(raw) is expected
+
+
+def test_watering_history_skip_reason() -> None:
+    char = WateringHistory.skip_reason
+    value = [
+        WateringHistorySkipReason.NONE,
+        WateringHistorySkipReason.SENSOR | WateringHistorySkipReason.BATTERY,
+        WateringHistorySkipReason.TEMPERATURE,
+    ]
+    raw = char.encode(value)
+    assert raw == b"\x00\x05\x80"
+    assert char.decode(raw) == value

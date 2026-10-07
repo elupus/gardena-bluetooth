@@ -792,6 +792,19 @@ class CharacteristicIntEnum[T: IntEnum](CharacteristicInt):
 
 
 @dataclass
+class CharacteristicIntFlagArray[T: IntFlag](Characteristic[list[T]]):
+    """An array of single byte bitmasks."""
+
+    flag: type[T] = field(kw_only=True)
+
+    def decode(self, data: bytes) -> list[T]:
+        return [self.flag(value) for value in data]
+
+    def encode(self, value: list[T]) -> bytes:
+        return bytes(int(v) for v in value)
+
+
+@dataclass
 class ErrorData[T: IntEnum]:
     index: int
     total_events: int
