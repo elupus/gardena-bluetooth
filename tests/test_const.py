@@ -204,3 +204,12 @@ def test_schedule_links(char, raw: bytes, service_id: int) -> None:
 )
 def test_sensor_type(raw: bytes, value: str) -> None:
     assert Sensor.type.decode(raw) == value
+
+
+@pytest.mark.parametrize(
+    ("raw", "hours"),
+    [(b"\x00\x00", 0), (b"\x18\x00", 24), (b"\xc8\x00", 200), (b"\xff\x00", 255)],
+)
+def test_pump_filter_reminder(raw: bytes, hours: int) -> None:
+    assert Pump.filter_reminder.decode(raw) == hours
+    assert Pump.filter_reminder.encode(hours) == raw
