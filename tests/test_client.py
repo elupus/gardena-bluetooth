@@ -7,7 +7,13 @@ from bleak.backends.service import BleakGATTService, BleakGATTServiceCollection
 from bleak.exc import BleakError
 
 from gardena_bluetooth.client import DEFAULT_DELAY, CachedConnection, Client
-from gardena_bluetooth.const import AquaContourContours, Valve1, Valve2
+from gardena_bluetooth.const import (
+    AquaContour,
+    AquaContourContours,
+    DeviceInformation,
+    Valve1,
+    Valve2,
+)
 from gardena_bluetooth.exceptions import (
     CharacteristicNoAccess,
     CharacteristicNotFound,
@@ -400,3 +406,110 @@ async def test_read_char_not_found_outside_its_service(establish_connection):
         )
         is None
     )
+
+
+AQUA_PRECISE_PNP_ID = b"\x01\x26\x04\x12\x00\x10\x00"
+
+
+def _unknown_product_client(establish_connection, pnp_id: bytes | None):
+    """Build a client without product type, for an AquaPrecise like device."""
+    info = [DeviceInformation.pnp_id.uuid] if pnp_id is not None else []
+    fake_client = MagicMock()
+    fake_client.is_connected = True
+    fake_client.disconnect = AsyncMock()
+    fake_client.services = _services(
+        {
+            DeviceInformation.uuid: info,
+            AquaContour.uuid: [AquaContour.frost_warning.uuid],
+        }
+    )
+
+    async def _read(characteristic):
+        if characteristic.uuid == DeviceInformation.pnp_id.uuid:
+            return pnp_id
+        return b"\x01"
+
+    fake_client.read_gatt_char = AsyncMock(side_effect=_read)
+    establish_connection.side_effect = None
+    establish_connection.return_value = fake_client
+
+    device = BLEDevice(address="AA:BB:CC:DD:EE:FF", name="Gardena", details=None)
+    return Client(CachedConnection(DEFAULT_DELAY, lambda: device)), fake_client
+
+
+@pytest.mark.asyncio
+async def test_unknown_product_type_read_from_pnp_id(establish_connection):
+    client, _ = _unknown_product_client(establish_connection, AQUA_PRECISE_PNP_ID)
+
+    assert await client.read_char(AquaContour.frost_warning) is True
+    assert await client.get_product_type() is ProductType.AQUA_CONTOURS
+
+
+@pytest.mark.asyncio
+async def test_unknown_product_type_get_all_characteristics(establish_connection):
+    client, _ = _unknown_product_client(establish_connection, AQUA_PRECISE_PNP_ID)
+
+    chars = await client.get_all_characteristics()
+
+    assert AquaContour.frost_warning.unique_id in chars
+
+
+@pytest.mark.asyncio
+async def test_invalid_pnp_id_logged_as_error(establish_connection, caplog):
+    client, _ = _unknown_product_client(establish_connection, b"\x01")
+
+    assert await client.get_product_type() is ProductType.UNKNOWN
+
+    assert [record.levelname for record in caplog.records] == ["ERROR"]
+    assert "Invalid PnP ID" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_missing_pnp_id_not_logged_as_error(establish_connection, caplog):
+    client, _ = _unknown_product_client(establish_connection, None)
+
+    assert await client.get_product_type() is ProductType.UNKNOWN
+
+    assert "Invalid PnP ID" not in caplog.text
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("pnp_id", [None, b"\x01"], ids=["missing", "invalid"])
+async def test_unknown_product_type_stays_unknown(establish_connection, pnp_id):
+    """Without a usable PnP ID the client works as before, and reads it only once."""
+    client, fake_client = _unknown_product_client(establish_connection, pnp_id)
+
+    with pytest.raises(CharacteristicNotFound):
+        await client.read_char(AquaContour.frost_warning)
+    reads = fake_client.read_gatt_char.await_count
+    assert await client.read_char(AquaContour.frost_warning, None) is None
+
+    assert await client.get_product_type() is ProductType.UNKNOWN
+    assert fake_client.read_gatt_char.await_count == reads
+
+
+@pytest.mark.asyncio
+async def test_unknown_product_type_retried_after_failure(establish_connection):
+    client, fake_client = _unknown_product_client(
+        establish_connection, AQUA_PRECISE_PNP_ID
+    )
+    read = fake_client.read_gatt_char.side_effect
+    fake_client.read_gatt_char.side_effect = BleakError("connection lost")
+
+    with pytest.raises(CommunicationFailure):
+        await client.read_char(AquaContour.frost_warning)
+
+    fake_client.read_gatt_char.side_effect = read
+    assert await client.read_char(AquaContour.frost_warning) is True
+
+
+@pytest.mark.asyncio
+async def test_known_product_type_does_not_read_pnp_id(establish_connection):
+    _, fake_client = _unknown_product_client(establish_connection, AQUA_PRECISE_PNP_ID)
+    device = BLEDevice(address="AA:BB:CC:DD:EE:FF", name="Gardena", details=None)
+    client = Client(
+        CachedConnection(DEFAULT_DELAY, lambda: device), ProductType.AQUA_CONTOURS
+    )
+
+    assert await client.read_char(AquaContour.frost_warning) is True
+    assert fake_client.read_gatt_char.await_count == 1

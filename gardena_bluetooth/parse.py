@@ -60,6 +60,16 @@ class ProductType(Enum):
 
         return ProductType.UNKNOWN
 
+    @staticmethod
+    def from_pnp_id(data: "CharacteristicPnpIdData") -> "ProductType":
+        """Get the product type from the group and model held by the PnP ID."""
+        if data.vendor_id != ManufacturerData.company:
+            return ProductType.UNKNOWN
+        # The PnP ID carries no variant, and 1 is valid for every known model
+        return ManufacturerData(
+            group=data.product_id, model=data.product_version, variant=1
+        ).product_type
+
 
 class EnumOrInt(IntEnum):
     @classmethod
