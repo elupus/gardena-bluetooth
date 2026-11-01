@@ -11,6 +11,7 @@ from bleak.backends.device import BLEDevice
 from bleak.exc import BleakError
 from bleak_retry_connector import establish_connection
 
+from .const import DeviceInformation
 from .exceptions import (
     CharacteristicNoAccess,
     CharacteristicNotFound,
@@ -34,6 +35,36 @@ LOGGER = logging.getLogger(__name__)
 DEFAULT_MISSING = object()
 DEFAULT_TYPE = TypeVar("DEFAULT_TYPE")
 DEFAULT_DELAY = 1
+
+
+def _find_characteristic(
+    client: BleakClient, uuid: str, service_uuid: str | None
+) -> BleakGATTCharacteristic | None:
+    """Find a characteristic, within its service when known.
+
+    Devices can expose the same characteristic uuid in several services,
+    which is ambiguous unless the lookup is scoped to the service.
+    """
+    if service_uuid is None:
+        return client.services.get_characteristic(uuid)
+    if (service := client.services.get_service(service_uuid)) is None:
+        return None
+    return service.get_characteristic(uuid)
+
+
+async def read_product_type(client: BleakClient) -> ProductType:
+    """Read the product type from the PnP ID of a connected device."""
+    pnp_id = DeviceInformation.pnp_id
+    characteristic = _find_characteristic(client, pnp_id.uuid, pnp_id.service_uuid)
+    if characteristic is None or "read" not in characteristic.properties:
+        return ProductType.UNKNOWN
+
+    data = await client.read_gatt_char(characteristic)
+    try:
+        return ProductType.from_pnp_id(pnp_id.decode(data))
+    except ValueError:
+        LOGGER.error("Invalid PnP ID %s", bytes(data))
+        return ProductType.UNKNOWN
 
 
 class CallLaterJob:
@@ -152,6 +183,10 @@ class Client:
         else:
             self._client = CachedConnection(DEFAULT_DELAY, lambda: client_or_device)
 
+        self._product_type_pending = product_type is ProductType.UNKNOWN
+        self._set_product_type(product_type)
+
+    def _set_product_type(self, product_type: ProductType) -> None:
         self._services = Service.services_for_product_type(product_type)
         self._product_type = product_type
         self._unique_id = {
@@ -160,23 +195,21 @@ class Client:
             for char in service.characteristics.values()
         }
 
+    async def get_product_type(self) -> ProductType:
+        """Get the product type, read from the PnP ID of the device if not known.
+
+        The read is made once, as the PnP ID is optional and does not change. A
+        failure to communicate leaves it pending, to try again on the next use.
+        """
+        if self._product_type_pending:
+            async with self._client() as client:
+                product_type = await read_product_type(client)
+            self._product_type_pending = False
+            self._set_product_type(product_type)
+        return self._product_type
+
     async def disconnect(self):
         await self._client.disconnect()
-
-    @staticmethod
-    def _find_characteristic(
-        client: BleakClient, uuid: str, service_uuid: str | None
-    ) -> BleakGATTCharacteristic | None:
-        """Find a characteristic, within its service when known.
-
-        Devices can expose the same characteristic uuid in several services,
-        which is ambiguous unless the lookup is scoped to the service.
-        """
-        if service_uuid is None:
-            return client.services.get_characteristic(uuid)
-        if (service := client.services.get_service(service_uuid)) is None:
-            return None
-        return service.get_characteristic(uuid)
 
     @overload
     async def read_char_raw(
@@ -196,7 +229,7 @@ class Client:
         service_uuid: str | None = None,
     ) -> bytes | DEFAULT_TYPE:
         async with self._client() as client:
-            characteristic = self._find_characteristic(client, uuid, service_uuid)
+            characteristic = _find_characteristic(client, uuid, service_uuid)
             if characteristic is None:
                 if default is not DEFAULT_MISSING:
                     return default
@@ -225,6 +258,7 @@ class Client:
         default: DEFAULT_TYPE = DEFAULT_MISSING,
     ) -> CharacteristicType | DEFAULT_TYPE:
         """Read data to from a characteristic."""
+        await self.get_product_type()
         if char.unique_id not in self._unique_id:
             LOGGER.debug("Attempt to read unsupported %s", char.unique_id)
             if default is not DEFAULT_MISSING:
@@ -257,7 +291,7 @@ class Client:
     ):
         async with self._client() as client:
             """Write data to a characteristic."""
-            characteristic = self._find_characteristic(client, uuid, service_uuid)
+            characteristic = _find_characteristic(client, uuid, service_uuid)
             if characteristic is None:
                 raise CharacteristicNotFound(f"Unable to find characteristic {uuid}")
 
@@ -284,6 +318,7 @@ class Client:
         response: bool | None = None,
     ) -> None:
         """Write data to a characteristic."""
+        await self.get_product_type()
         if char.unique_id not in self._unique_id:
             raise CharacteristicNotFound
 
@@ -304,7 +339,7 @@ class Client:
     ) -> Callable[[], Awaitable[None]]:
         async with self._client() as client:
             """Subscribe to a characteristic."""
-            characteristic = self._find_characteristic(client, uuid, service_uuid)
+            characteristic = _find_characteristic(client, uuid, service_uuid)
             if characteristic is None:
                 raise CharacteristicNotFound(f"Unable to find characteristic {uuid}")
 
@@ -359,6 +394,7 @@ class Client:
         timeout: float = 10.0,
     ) -> bytes:
         """Read a resource transferred via a multi-frame segmented protocol."""
+        await self.get_product_type()
         if char.unique_id not in self._unique_id:
             raise CharacteristicNotFound
 
@@ -419,6 +455,7 @@ class Client:
 
     async def get_all_characteristics(self) -> dict[str, Characteristic]:
         """Get all characteristics from device."""
+        await self.get_product_type()
         pairs = await self._get_all_service_characteristic_uuids()
         characteristics = {
             char.unique_id: char

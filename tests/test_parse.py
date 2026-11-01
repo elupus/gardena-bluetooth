@@ -21,6 +21,7 @@ from gardena_bluetooth.parse import (
     CharacteristicIntKeys,
     CharacteristicNullString,
     CharacteristicNullStringUf8,
+    CharacteristicPnpIdData,
     CharacteristicPositionContourMask,
     CharacteristicSchedule,
     CharacteristicScheduleData,
@@ -493,3 +494,19 @@ def test_event_history_schedule_index(schedule_index: int):
 )
 def test_weekdays_decode(raw: bytes, days: set[Day]):
     assert CharacteristicWeekdays.decode(raw) == days
+
+
+@pytest.mark.parametrize(
+    ("vendor_id", "product_id", "product_version", "product_type"),
+    [
+        (0x0426, 18, 16, ProductType.AQUA_CONTOURS),
+        (0x0426, 18, 0, ProductType.WATER_COMPUTER),
+        (0x0426, 17, 2, ProductType.PRESSURE_TANKS),
+        (0x0426, 10, 1, ProductType.MOWER),
+        (0x0426, 16, 0, ProductType.UNKNOWN),
+        (0x004C, 18, 16, ProductType.UNKNOWN),
+    ],
+)
+def test_product_type_from_pnp_id(vendor_id, product_id, product_version, product_type):
+    data = CharacteristicPnpIdData(1, vendor_id, product_id, product_version)
+    assert ProductType.from_pnp_id(data) is product_type
