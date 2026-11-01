@@ -6,6 +6,7 @@ from collections.abc import AsyncGenerator
 
 from bleak import AdvertisementData, BaseBleakScanner, BleakScanner, BLEDevice
 
+from .const import ScanService
 from .parse import ManufacturerData
 
 LOGGER = logging.getLogger(__name__)
@@ -59,7 +60,10 @@ async def async_scan_devices(
         while True:
             device, advertisement = await queue.get()
 
-            if ManufacturerData.company not in advertisement.manufacturer_data:
+            if (
+                ManufacturerData.company not in advertisement.manufacturer_data
+                and ScanService not in advertisement.service_uuids
+            ):
                 continue
 
             data = devices.get(device.address)
