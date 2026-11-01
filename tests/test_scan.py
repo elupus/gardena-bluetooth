@@ -73,8 +73,16 @@ async def test_scan_accepts_manufacturer_data_advertisement():
         assert await _first_address() == "00:00:00:00:00:01"
 
 
-async def test_scan_skips_advertisement_without_manufacturer_data():
+async def test_scan_accepts_scan_service_only_advertisement():
     advertisements = [_advertisement("00:00:00:00:00:02", service_uuids=[ScanService])]
+    with patch(
+        "gardena_bluetooth.scan.BleakScanner", new=_mock_scanner(advertisements)
+    ):
+        assert await _first_address() == "00:00:00:00:00:02"
+
+
+async def test_scan_skips_unrelated_advertisement():
+    advertisements = [_advertisement("00:00:00:00:00:03", manufacturer_data={76: b""})]
     with patch(
         "gardena_bluetooth.scan.BleakScanner", new=_mock_scanner(advertisements)
     ):
