@@ -8,9 +8,15 @@ from bleak import (
 )
 from bleak.uuids import uuidstr_to_str
 
-from .client import CachedConnection, Client
+from .client import CachedConnection, Client, read_product_type
 from .exceptions import CharacteristicNoAccess, GardenaBluetoothException
-from .parse import Characteristic, CharacteristicSegmented, ManufacturerData, Service
+from .parse import (
+    Characteristic,
+    CharacteristicSegmented,
+    ManufacturerData,
+    ProductType,
+    Service,
+)
 from .scan import async_get_devices, async_scan_devices
 
 IGNORED_NOTIFY_UUIDS = {
@@ -58,6 +64,10 @@ async def connect(address: str):
 
     click.echo(f"Connecting to: {address}")
     async with BleakClient(device.ble_device, timeout=20) as client:
+        if product_type is ProductType.UNKNOWN:
+            product_type = await read_product_type(client)
+            click.echo(f"Product type from PnP ID: {product_type}")
+
         for service in client.services:
             service_parser = Service.find_service(service.uuid, product_type)
 
@@ -86,7 +96,10 @@ async def connect(address: str):
                 if data is not None:
                     click.echo(f"    Raw: {data}")
                     if char_parser:
-                        click.echo(f"    Data: {char_parser.decode(data)!r}")
+                        try:
+                            click.echo(f"    Data: {char_parser.decode(data)!r}")
+                        except (IndexError, ValueError) as exc:
+                            click.echo(f"    Failed to decode: {repr(exc)}")
 
 
 @main.command()
@@ -112,6 +125,7 @@ async def monitor(address: str):
 
     try:
         click.echo(f"Connecting: {address}")
+        click.echo(f"Product type: {await client.get_product_type()}")
         characteristics = await client.get_all_characteristics()
         for char in characteristics.values():
             try:
