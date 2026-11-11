@@ -108,7 +108,7 @@ class CachedConnection:
 
     def __init__(
         self,
-        disconnect_delay: float,
+        disconnect_delay: float | None,
         device_lookup: Callable[[], BLEDevice],
         max_attempts=1,
     ) -> None:
@@ -162,7 +162,11 @@ class CachedConnection:
                 finally:
                     self._count -= 1
 
-                    if not self._count and self._client:
+                    if (
+                        not self._count
+                        and self._client
+                        and self._disconnect_delay is not None
+                    ):
                         self._disconnect_job.call_later(self._disconnect_delay)
         except BleakError as exception:
             await self._disconnect_job.call_now()

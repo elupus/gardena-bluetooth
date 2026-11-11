@@ -513,3 +513,26 @@ async def test_known_product_type_does_not_read_pnp_id(establish_connection):
 
     assert await client.read_char(AquaContour.frost_warning) is True
     assert fake_client.read_gatt_char.await_count == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("delay", [None, 5.0])
+async def test_connection_disconnect_policy(establish_connection, delay):
+    device = BLEDevice(address="AA:BB:CC:DD:EE:FF", name="Gardena", details=None)
+    connection = CachedConnection(delay, lambda: device)
+    client = MagicMock(is_connected=True)
+    client.disconnect = AsyncMock()
+    establish_connection.side_effect = None
+    establish_connection.return_value = client
+    with patch.object(connection._disconnect_job, "call_later") as schedule:
+        async with connection() as first:
+            assert first is client
+        async with connection() as second:
+            assert second is client
+        assert schedule.call_args_list == (
+            [] if delay is None else [call(delay), call(delay)]
+        )
+    establish_connection.assert_awaited_once()
+    await connection.disconnect()
+    client.disconnect.assert_awaited_once()
+    assert connection._client is None
