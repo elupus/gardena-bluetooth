@@ -1,3 +1,4 @@
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
@@ -535,3 +536,18 @@ async def test_failed_cleanup_preserves_original_error_and_reconnects(
     await connection.disconnect()
     first.disconnect.assert_awaited_once()
     second.disconnect.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_disconnect_does_not_swallow_cancellation(establish_connection):
+    device = BLEDevice(address="AA:BB:CC:DD:EE:FF", name="Gardena", details=None)
+    connection = CachedConnection(DEFAULT_DELAY, lambda: device)
+    client = MagicMock(is_connected=True)
+    client.disconnect = AsyncMock(side_effect=asyncio.CancelledError)
+    establish_connection.side_effect = None
+    establish_connection.return_value = client
+    async with connection():
+        pass
+    with pytest.raises(asyncio.CancelledError):
+        await connection.disconnect()
+    assert connection._client is None
