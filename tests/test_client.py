@@ -1,3 +1,4 @@
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
@@ -536,3 +537,39 @@ async def test_connection_disconnect_policy(establish_connection, delay):
     await connection.disconnect()
     client.disconnect.assert_awaited_once()
     assert connection._client is None
+
+
+@pytest.mark.asyncio
+async def test_persistent_connection_recovers_from_operation_failure(
+    establish_connection,
+):
+    device = BLEDevice(address="AA:BB:CC:DD:EE:FF", name="Gardena", details=None)
+    connection = CachedConnection(None, lambda: device)
+    first = MagicMock(is_connected=True)
+    first.disconnect = AsyncMock()
+    second = MagicMock(is_connected=True)
+    second.disconnect = AsyncMock()
+    establish_connection.side_effect = [first, second]
+    with pytest.raises(CommunicationFailure, match="read failed"):
+        async with connection():
+            raise BleakError("read failed")
+    first.disconnect.assert_awaited_once()
+    assert connection._client is None
+    async with connection() as client:
+        assert client is second
+    await connection.disconnect()
+
+
+@pytest.mark.asyncio
+async def test_persistent_connection_propagates_cancellation(establish_connection):
+    device = BLEDevice(address="AA:BB:CC:DD:EE:FF", name="Gardena", details=None)
+    connection = CachedConnection(None, lambda: device)
+    client = MagicMock(is_connected=True)
+    client.disconnect = AsyncMock()
+    establish_connection.side_effect = None
+    establish_connection.return_value = client
+    with pytest.raises(asyncio.CancelledError):
+        async with connection():
+            raise asyncio.CancelledError
+    await connection.disconnect()
+    client.disconnect.assert_awaited_once()

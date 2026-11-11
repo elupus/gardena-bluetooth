@@ -112,7 +112,7 @@ class CachedConnection:
         device_lookup: Callable[[], BLEDevice],
         max_attempts=1,
     ) -> None:
-        """Initialize cached client."""
+        """Initialize a client; None disables automatic disconnection."""
 
         self._client: BleakClient | None = None
         self._lock = asyncio.Lock()
