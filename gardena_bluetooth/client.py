@@ -130,7 +130,10 @@ class CachedConnection:
             if client := self._client:
                 LOGGER.debug("Disconnecting from %s", self._client.address)
                 self._client = None
-                await client.disconnect()
+                try:
+                    await client.disconnect()
+                except BleakError as exception:
+                    LOGGER.debug("Error during disconnect: %s", exception)
 
     async def _connect(self) -> BleakClient:
         device = self._lookup()

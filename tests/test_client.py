@@ -1,3 +1,4 @@
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
@@ -513,3 +514,40 @@ async def test_known_product_type_does_not_read_pnp_id(establish_connection):
 
     assert await client.read_char(AquaContour.frost_warning) is True
     assert fake_client.read_gatt_char.await_count == 1
+
+
+@pytest.mark.asyncio
+async def test_failed_cleanup_preserves_original_error_and_reconnects(
+    establish_connection,
+):
+    device = BLEDevice(address="AA:BB:CC:DD:EE:FF", name="Gardena", details=None)
+    connection = CachedConnection(DEFAULT_DELAY, lambda: device)
+    first = MagicMock(is_connected=True)
+    first.disconnect = AsyncMock(side_effect=BleakError("cleanup failed"))
+    second = MagicMock(is_connected=True)
+    second.disconnect = AsyncMock()
+    establish_connection.side_effect = [first, second]
+    with pytest.raises(CommunicationFailure, match="original failure"):
+        async with connection():
+            raise BleakError("original failure")
+    assert connection._client is None
+    async with connection() as client:
+        assert client is second
+    await connection.disconnect()
+    first.disconnect.assert_awaited_once()
+    second.disconnect.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_disconnect_does_not_swallow_cancellation(establish_connection):
+    device = BLEDevice(address="AA:BB:CC:DD:EE:FF", name="Gardena", details=None)
+    connection = CachedConnection(DEFAULT_DELAY, lambda: device)
+    client = MagicMock(is_connected=True)
+    client.disconnect = AsyncMock(side_effect=asyncio.CancelledError)
+    establish_connection.side_effect = None
+    establish_connection.return_value = client
+    async with connection():
+        pass
+    with pytest.raises(asyncio.CancelledError):
+        await connection.disconnect()
+    assert connection._client is None
